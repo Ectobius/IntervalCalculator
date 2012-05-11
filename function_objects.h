@@ -8,16 +8,74 @@
 namespace int_calc
 {
 
+void load_function_objects(object_storage *stor);
+
+
 class func_plus : public function_object
 {
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
-    virtual ~func_plus() { }
-
-    virtual stored_object* copy() {
-        func_plus *obj = new func_plus(*this);
-        return obj;
-    }
 };
+
+class func_sin : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_cos : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_tan : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_asin : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_acos : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_atan : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_exp : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_log : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_abs : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_sqrt : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_transp : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_det : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
 
 }
 

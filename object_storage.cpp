@@ -1,3 +1,6 @@
+#ifndef OBJECT_STORAGE_CPP
+#define OBJECT_STORAGE_CPP
+
 #include "object_storage.h"
 
 #include <algorithm>
@@ -11,7 +14,7 @@ object_storage::object_storage()
 {
 }
 
-void map_object_storage::addObject(std::string &nam, stored_object *obj)
+void map_object_storage::addObject(const std::string &nam, stored_object *obj)
 {
     storage_type::iterator iter = storage.find(nam);
     if(iter == storage.end())
@@ -97,9 +100,24 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            numeric_matrix_object *num_res =
-                    new numeric_matrix_object(left_num->getMatrix());
-            num_res->getMatrix() += right_num->getMatrix();
+            numeric_matrix_object *num_res = 0;
+            if(left_num->getRows() == 1 && left_num->getColumns() == 1)
+            {
+                num_res = new numeric_matrix_object(right_num->getMatrix());
+                num_res->getMatrix() += left_num->getMatrix()(0, 0);
+            }
+            else
+            {
+                num_res = new numeric_matrix_object(left_num->getMatrix());
+                if(right_num->getRows() == 1 && right_num->getColumns() == 1)
+                {
+                    num_res->getMatrix() += right_num->getMatrix()(0, 0);
+                }
+                else
+                {
+                    num_res->getMatrix() += right_num->getMatrix();
+                }
+            }
             result = num_res;
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -109,8 +127,24 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
 
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
-            interval_res->getMatrix().assign(left_num->getMatrix());
-            interval_res->getMatrix() += right_interval->getMatrix();
+
+            if(left_num->getRows() == 1 && left_num->getColumns() == 1)
+            {
+                interval_res->getMatrix().assign(right_interval->getMatrix());
+                interval_res->getMatrix() += left_num->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res->getMatrix().assign(left_num->getMatrix());
+                if(right_interval->getRows() == 1 && right_interval->getColumns() == 1)
+                {
+                    interval_res->getMatrix() += right_interval->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() += right_interval->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else
@@ -127,9 +161,25 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            interval_matrix_object *interval_res =
-                    new interval_matrix_object(left_interval->getMatrix());
-            interval_res->getMatrix() += right_num->getMatrix();
+            interval_matrix_object *interval_res = 0;
+            if(left_interval->getRows() == 1 && left_interval->getColumns() == 1)
+            {
+                interval_res = new interval_matrix_object(0, 0);
+                interval_res->getMatrix().assign(right_num->getMatrix());
+                interval_res->getMatrix() += left_interval->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res = new interval_matrix_object(left_interval->getMatrix());
+                if(right_num->getRows() == 1 && right_num->getColumns() == 1)
+                {
+                    interval_res->getMatrix() += right_num->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() += right_num->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -138,8 +188,25 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
             interval_matrix_object *interval_res =
-                    new interval_matrix_object(left_interval->getMatrix());
-            interval_res->getMatrix() += right_interval->getMatrix();
+                    new interval_matrix_object(0, 0);
+
+            if(left_interval->getRows() == 1 && left_interval->getColumns() == 1)
+            {
+                interval_res->getMatrix().assign(right_interval->getMatrix());
+                interval_res->getMatrix() += left_interval->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res->getMatrix().assign(left_interval->getMatrix());
+                if(right_interval->getRows() == 1 && right_interval->getColumns() == 1)
+                {
+                    interval_res->getMatrix() += right_interval->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() += right_interval->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else
@@ -169,9 +236,25 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            numeric_matrix_object *num_res =
-                    new numeric_matrix_object(left_num->getMatrix());
-            num_res->getMatrix() -= right_num->getMatrix();
+            numeric_matrix_object *num_res = 0;
+            if(left_num->getRows() == 1 && left_num->getColumns() == 1)
+            {
+                num_res = new numeric_matrix_object(right_num->getMatrix());
+                num_res->getMatrix() *= -1;
+                num_res->getMatrix() += left_num->getMatrix()(0, 0);
+            }
+            else
+            {
+                num_res = new numeric_matrix_object(left_num->getMatrix());
+                if(right_num->getRows() == 1 && right_num->getColumns() == 1)
+                {
+                    num_res->getMatrix() -= right_num->getMatrix()(0, 0);
+                }
+                else
+                {
+                    num_res->getMatrix() -= right_num->getMatrix();
+                }
+            }
             result = num_res;
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -180,9 +263,25 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
             interval_matrix_object *interval_res =
-                    new interval_matrix_object(0, 0);
-            interval_res->getMatrix().assign(left_num->getMatrix());
-            interval_res->getMatrix() -= right_interval->getMatrix();
+                    new interval_matrix_object(0, 0);            
+            if(left_num->getRows() == 1 && left_num->getColumns() == 1)
+            {
+                interval_res->getMatrix().assign(right_interval->getMatrix());
+                interval_res->getMatrix() *= -1;
+                interval_res->getMatrix() += left_num->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res->getMatrix().assign(left_num->getMatrix());
+                if(right_interval->getRows() == 1 && right_interval->getColumns() == 1)
+                {
+                    interval_res->getMatrix() -= right_interval->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() -= right_interval->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else
@@ -199,9 +298,26 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            interval_matrix_object *interval_res =
-                    new interval_matrix_object(left_interval->getMatrix());
-            interval_res->getMatrix() -= right_num->getMatrix();
+            interval_matrix_object *interval_res = 0;
+            if(left_interval->getRows() == 1 && left_interval->getColumns() == 1)
+            {
+                interval_res = new interval_matrix_object(0, 0);
+                interval_res->getMatrix().assign(right_num->getMatrix());
+                interval_res->getMatrix() *= -1;
+                interval_res->getMatrix() += left_interval->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res = new interval_matrix_object(left_interval->getMatrix());
+                if(right_num->getRows() == 1 && right_num->getColumns() == 1)
+                {
+                    interval_res->getMatrix() -= right_num->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() -= right_num->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -210,8 +326,25 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
             interval_matrix_object *interval_res =
-                    new interval_matrix_object(left_interval->getMatrix());
-            interval_res->getMatrix() -= right_interval->getMatrix();
+                    new interval_matrix_object(0, 0);
+            if(left_interval->getRows() == 1 && left_interval->getColumns() == 1)
+            {
+                interval_res->getMatrix().assign(right_interval->getMatrix());
+                interval_res->getMatrix() *= -1;
+                interval_res->getMatrix() += left_interval->getMatrix()(0, 0);
+            }
+            else
+            {
+                interval_res->getMatrix().assign(left_interval->getMatrix());
+                if(right_interval->getRows() == 1 && right_interval->getColumns() == 1)
+                {
+                    interval_res->getMatrix() -= right_interval->getMatrix()(0, 0);
+                }
+                else
+                {
+                    interval_res->getMatrix() -= right_interval->getMatrix();
+                }
+            }
             result = interval_res;
         }
         else
@@ -256,7 +389,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
 
-            matrix< interval<double> >::multiply(interval_res->getMatrix(),
+            matrix< d_interval >::multiply(interval_res->getMatrix(),
                                      left_num->getMatrix(), right_interval->getMatrix());
 
             result = interval_res;
@@ -278,7 +411,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            matrix< interval<double> >::multiply(interval_res->getMatrix(),
+            matrix< d_interval >::multiply(interval_res->getMatrix(),
                                      left_interval->getMatrix(), right_num->getMatrix());
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -286,7 +419,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *right_interval =
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
-            matrix< interval<double> >::multiply(interval_res->getMatrix(),
+            matrix< d_interval >::multiply(interval_res->getMatrix(),
                                      left_interval->getMatrix(), right_interval->getMatrix());
         }
         else
@@ -374,6 +507,10 @@ matrix_object& operator /(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+
+
 //*************************************************************************************
 
 }
+
+#endif

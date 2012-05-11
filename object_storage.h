@@ -9,6 +9,11 @@
 #include "expr_except.h"
 #include "boost/numeric/interval.hpp"
 
+using namespace boost::numeric::interval_lib;
+typedef policies<save_state<rounded_transc_opp<double> >,
+                            checking_base<double> > defpolicy;
+typedef boost::numeric::interval<double, defpolicy> d_interval;
+
 namespace int_calc
 {
 class stored_object
@@ -64,7 +69,7 @@ private:
 class interval_matrix_object : public matrix_object
 {
 public:
-    interval_matrix_object(matrix< boost::numeric::interval<double> > &matr) :
+    interval_matrix_object(matrix< d_interval > &matr) :
         matrix_variable(matr)
     {
     }
@@ -74,10 +79,10 @@ public:
     {
     }
 
-    matrix< boost::numeric::interval<double> >&
+    matrix< d_interval >&
     getMatrix() { return matrix_variable; }
 
-    void setMatrix(matrix< boost::numeric::interval<double> > &matr)
+    void setMatrix(matrix< d_interval > &matr)
     {
         matrix_variable = matr;
     }
@@ -93,7 +98,7 @@ public:
     }
 
 private:
-    matrix< boost::numeric::interval<double> > matrix_variable;
+    matrix< d_interval > matrix_variable;
 };
 
 class function_object : public stored_object
@@ -103,7 +108,7 @@ public:
 
     virtual ~function_object() { }
 
-    virtual stored_object* copy() = 0;
+    virtual stored_object* copy() { return 0; }
 };
 
 
@@ -112,13 +117,35 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator -(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator *(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator /(matrix_object &lhs, matrix_object &rhs);
+
+template <typename T> void applyToElements(matrix<T>& matr, T(*func)(T))
+{
+    for(size_t i = 0; i != matr.getRows(); ++i)
+    {
+        for(size_t j = 0; j != matr.getColumns(); ++j)
+        {
+            matr(i, j) = func(matr(i, j));
+        }
+    }
+}
+
+template <typename T> void applyToConstElements(matrix<T>& matr, T(*func)(const T&))
+{
+    for(size_t i = 0; i != matr.getRows(); ++i)
+    {
+        for(size_t j = 0; j != matr.getColumns(); ++j)
+        {
+            matr(i, j) = func(matr(i, j));
+        }
+    }
+}
 //*****************************************************************************
 
 
 class object_storage
 {
 public:
-    virtual void addObject(std::string &, stored_object *) = 0;
+    virtual void addObject(const std::string &, stored_object *) = 0;
     virtual void deleteObject(std::string &) = 0;
     virtual stored_object* getObjectByName(const std::string&) = 0;
     virtual void clear() = 0;
@@ -134,7 +161,7 @@ public:
 class map_object_storage : public object_storage
 {
 public:
-    virtual void addObject(std::string &, stored_object *);
+    virtual void addObject(const std::string &, stored_object *);
     virtual void deleteObject(std::string &);
     virtual stored_object* getObjectByName(const std::string&);
     virtual void clear();
@@ -156,5 +183,6 @@ private:
 };
 
 }
+
 
 #endif // OBJECT_STORAGE_H

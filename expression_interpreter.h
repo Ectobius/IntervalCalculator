@@ -226,10 +226,10 @@ public:
         constant = num_obj;
     }
 
-    constant_node(interval<double> ival) :
+    constant_node(interval<double, defpolicy> ival) :
         constant(0)
     {
-        matrix< interval<double> > matr(1, 1);
+        matrix< interval<double, defpolicy> > matr(1, 1);
         constant = new interval_matrix_object(matr);
         (*dynamic_cast<interval_matrix_object*>(constant)).getMatrix()(0, 0) = ival;
     }

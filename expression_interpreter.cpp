@@ -450,10 +450,14 @@ string expression_interpreter::S()
     else
     {
         stored_object *res = (*root)()->copy();
-
-        storage->addObject(var_name, res);
-
         delete root;
+
+        stored_object *assigned_obj = storage->getObjectByName(var_name);
+        if(dynamic_cast<function_object*>(assigned_obj))
+        {
+            throw wrong_type("Left side of assignment cannot be a function");
+        }
+        storage->addObject(var_name, res);
     }
 
     return var_name;

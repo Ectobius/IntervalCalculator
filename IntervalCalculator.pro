@@ -10,24 +10,24 @@ TARGET = IntervalCalculator
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    scanner.cpp \
-    object_storage.cpp \
-    matrix.cpp \
-    interval_ext.cpp \
-    function_objects.cpp \
-    expression_interpreter.cpp
+SOURCES += main.cpp
+SOURCES +=         mainwindow.cpp
+SOURCES +=     scanner.cpp
+SOURCES +=     object_storage.cpp
+SOURCES +=     matrix.cpp
+SOURCES +=     interval_ext.cpp
+SOURCES +=    function_objects.cpp
+SOURCES +=    expression_interpreter.cpp
 
 INCLUDEPATH = C:\Programming\boost_1_49_0
 
-HEADERS  += mainwindow.h \
-    scanner.h \
-    object_storage.h \
-    matrix.h \
-    interval_ext.h \
-    function_objects.h \
-    expression_interpreter.h \
-    expr_except.h
+HEADERS  += mainwindow.h
+HEADERS  +=     scanner.h
+HEADERS  +=     object_storage.h
+HEADERS  +=     matrix.h
+HEADERS  +=     interval_ext.h
+HEADERS  +=     function_objects.h
+HEADERS  +=     expression_interpreter.h
+HEADERS  +=     expr_except.h
 
 FORMS    += mainwindow.ui

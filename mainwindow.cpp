@@ -5,6 +5,7 @@
 #include <sstream>
 #include "matrix.h"
 #include "interval_ext.h"
+#include "function_objects.h"
 #include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -16,6 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     storage = new map_object_storage();
     interpreter = new expression_interpreter(storage);
+
+    load_function_objects(storage);
 
     //Соединение слотов с сигналами
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
@@ -49,40 +52,45 @@ void MainWindow::executeCommand()
     }
 
     std::string varName;
+    ostringstream sStream;
     try
     {
         varName = interpreter->execute(command);
+
+        sStream << varName << " = " << std::endl;
+
+        stored_object *obj = storage->getObjectByName(varName);
+        if(dynamic_cast<numeric_matrix_object*>(obj))
+        {
+            numeric_matrix_object *num_obj =
+                    dynamic_cast<numeric_matrix_object*>(obj);
+
+            print_matr(sStream, num_obj->getMatrix());
+        }
+        else if(dynamic_cast<interval_matrix_object*>(obj))
+        {
+            interval_matrix_object *interval_obj =
+                    dynamic_cast<interval_matrix_object*>(obj);
+
+            print_matr(sStream, interval_obj->getMatrix());
+        }
+        else
+        {
+
+        }
     }
-    catch(runtime_error err)
+    catch(std::runtime_error err)
     {
-
+        sStream.clear();
+        sStream << err.what();
     }
 
-    ostringstream sStream;
-    sStream << varName << " = " << std::endl;
 
-    stored_object *obj = storage->getObjectByName(varName);
-    if(dynamic_cast<numeric_matrix_object*>(obj))
-    {
-        numeric_matrix_object *num_obj =
-                dynamic_cast<numeric_matrix_object*>(obj);
 
-        print_matr(sStream, num_obj->getMatrix());
-    }
-    else if(dynamic_cast<interval_matrix_object*>(obj))
-    {
-        interval_matrix_object *interval_obj =
-                dynamic_cast<interval_matrix_object*>(obj);
-
-        print_matr(sStream, interval_obj->getMatrix());
-    }
-    else
-    {
-
-    }
 
     sStream << std::endl;
 
+    ui->textEdit->append(ui->commandLineEdit->text());
     ui->textEdit->append(QString(sStream.str().c_str()));
     ui->commandLineEdit->clear();
 }

@@ -22,6 +22,12 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QTextEdit" name="textEdit">
+           <property name="font">
+            <font>
+             <family>Courier New</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="readOnly">
             <bool>true</bool>
            </property>
@@ -40,7 +46,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="commandLineEdit"/>
+            <widget class="QLineEdit" name="commandLineEdit">
+             <property name="font">
+              <font>
+               <family>Courier New</family>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="executeButton">

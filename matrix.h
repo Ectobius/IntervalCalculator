@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <iostream>
 
 namespace int_calc
 {
@@ -47,9 +48,13 @@ public:
     template <typename TR> matrix& operator*=(const TR&);
     template <typename TR> matrix& operator/=(const TR&);
 
+    matrix& transp();
+    T det();
+
 
     template <typename T1, typename T2>
     static void multiply(matrix&, matrix<T1>&, matrix<T2>&);
+
 
 private:
     size_t rows;
@@ -58,9 +63,15 @@ private:
 
     void destroy();
     template <typename TR> void copy_elems(const matrix<TR>&);
+    T** allocate_elems(size_t r, size_t c);
+
+    T recurse_det(size_t order);
+
+    static bool* rows_flags;
+    static bool* columns_flags;
 };
 
-template <typename T> void print_matr(const matrix<T> &M);
+template <typename T> void print_matr(std::ostream &os, const matrix<T> &M);
 
 }
 

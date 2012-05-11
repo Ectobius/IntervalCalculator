@@ -2,7 +2,7 @@
 #define MATRIX_CPP
 
 #include "matrix.h"
-#include <iostream>
+
 
 using namespace std;
 
@@ -55,6 +55,17 @@ matrix<T>::copy_elems(const matrix<TR>& M)
 
     rows = M.rows;
     columns = M.columns;
+}
+
+template <typename T> T** matrix<T>::allocate_elems(size_t r, size_t c)
+{
+    T** res_ptr = new T*[r];
+    for(size_t i = 0; i != r; ++i)
+    {
+        res_ptr[i] = new T[c];
+    }
+
+    return res_ptr;
 }
 
 /*Конструктор копирования*/
@@ -247,18 +258,110 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(co
     return *this;
 }
 
+template <typename T> matrix<T>& matrix<T>::transp()
+{
+    size_t r = rows;
+    size_t c = columns;
+    T** new_ptr = allocate_elems(columns, rows);
+    for(size_t i = 0; i != rows; ++i)
+    {
+        for(size_t j = 0; j != columns; ++j)
+        {
+            new_ptr[j][i] = matr_ptr[i][j];
+        }
+    }
+    destroy();
+    matr_ptr = new_ptr;
+    rows = c;
+    columns = r;
+    return *this;
+}
+
+template <typename T> T matrix<T>::det()
+{
+    if(rows != columns)
+    {
+        throw size_mismatch("It is not a square matrix");
+    }
+    if(rows == 1)
+    {
+        return matr_ptr[0][0];
+    }
+
+    rows_flags = new bool[rows];
+    columns_flags = new bool[columns];
+    for(size_t i = 0; i < rows; ++i)
+        rows_flags[i] = false;
+    for(size_t i = 0; i < columns; ++i)
+        columns_flags[i] = false;
+
+    T result = recurse_det(rows);
+    delete rows_flags;
+    delete columns_flags;
+    rows_flags = 0;
+    columns_flags = 0;
+    return result;
+}
+
+template <typename T> T matrix<T>::recurse_det(size_t order)
+{
+    T result = T(0);
+    T curDet;
+    size_t initRow = 0,
+            initCol = 0;
+    while(rows_flags[initRow++]);
+    while(columns_flags[initCol++]);
+    --initRow;
+    --initCol;
+
+    if(order == 2)
+    {
+        size_t secRow = initRow + 1;
+        size_t secCol = initCol + 1;
+        while(rows_flags[secRow++]);
+        while(columns_flags[secCol++]);
+        --secRow;
+        --secCol;
+        result = matr_ptr[initRow][initCol] * matr_ptr[secRow][secCol] -
+                matr_ptr[secRow][initCol] * matr_ptr[initRow][secCol];
+    }
+    else
+    {
+        rows_flags[initRow] = true;
+        for(size_t j = initCol; j != columns; ++j)
+        {
+            if(!columns_flags[j])
+            {
+                columns_flags[j] = true;
+                curDet = recurse_det(order - 1);
+                columns_flags[j] = false;
+                if((initRow + j) % 2)
+                {
+                    result -= matr_ptr[initRow][j] * curDet;
+                }
+                else
+                {
+                    result += matr_ptr[initRow][j] * curDet;
+                }
+            }
+        }
+        rows_flags[initRow] = false;
+    }
+    return result;
+}
+
 /*Метод, осуществляющий умножение матриц*/
 template <typename T> template <typename T1, typename T2>
 void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
 {
     if(matr1.getRows() == 1 &&
-            matr1.getRows() == 1)
+            matr1.getColumns() == 1)
     {
         res.assign(matr2);
         res *= matr1(0, 0);
     }
     else if(matr2.getRows() == 1 &&
-            matr2.getRows() == 1)
+            matr2.getColumns() == 1)
     {
         res.assign(matr1);
         res *= matr2(0, 0);
@@ -303,6 +406,9 @@ template <typename T> void print_matr(ostream &os, const matrix<T> &M)
         os << std::endl;
     }
 }
+
+template <typename T> bool* matrix<T>::rows_flags = 0;
+template <typename T> bool* matrix<T>::columns_flags = 0;
 
 }
 
