@@ -1,4 +1,4 @@
-#include "expression_interpreter.h"
+п»ї#include "expression_interpreter.h"
 #include "matrix.h"
 #include <cstdlib>
 
@@ -8,7 +8,7 @@ using boost::numeric::interval;
 namespace int_calc
 {
 
-/*Вычисление унарного минуса*/
+/*Р’С‹С‡РёСЃР»РµРЅРёРµ СѓРЅР°СЂРЅРѕРіРѕ РјРёРЅСѓСЃР°*/
 stored_object* unary_minus_node::operator()()
 {
     stored_object *child_res = (*child)();
@@ -36,7 +36,7 @@ stored_object* unary_minus_node::operator()()
     }
 }
 
-/*Вычисление бинарного плюса*/
+/*Р’С‹С‡РёСЃР»РµРЅРёРµ Р±РёРЅР°СЂРЅРѕРіРѕ РїР»СЋСЃР°*/
 stored_object* plus_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -68,7 +68,7 @@ stored_object* plus_node::operator()()
     return result;
 }
 
-/*Вычисление бинарного минуса*/
+/*Р’С‹С‡РёСЃР»РµРЅРёРµ Р±РёРЅР°СЂРЅРѕРіРѕ РјРёРЅСѓСЃР°*/
 stored_object* minus_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -100,7 +100,7 @@ stored_object* minus_node::operator()()
     return result;
 }
 
-//Выполнение умножения
+//Р’С‹РїРѕР»РЅРµРЅРёРµ СѓРјРЅРѕР¶РµРЅРёСЏ
 stored_object* multiply_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -393,7 +393,7 @@ expression_interpreter::expression_interpreter(object_storage *stor) :
 }
 
 
-/********__________________Анализ_____________________**********************
+/********__________________РђРЅР°Р»РёР·_____________________**********************
 ****************************************************************************/
 
 string expression_interpreter::execute(std::string &cmd)

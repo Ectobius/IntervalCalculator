@@ -1,4 +1,4 @@
-#ifndef EXPRESSION_INTERPRETER_H
+﻿#ifndef EXPRESSION_INTERPRETER_H
 #define EXPRESSION_INTERPRETER_H
 
 #include "scanner.h"

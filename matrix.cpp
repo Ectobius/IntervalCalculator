@@ -9,13 +9,13 @@ using namespace std;
 namespace int_calc
 {
 
-/*Конструктор по умолчанию*/
+/*РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ*/
 template <typename T> matrix<T>::matrix(): rows(0), columns(0), matr_ptr(0)
 {
 
 }
 
-/*Конструктор, создающий матрицу заданного размера*/
+/*РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ, СЃРѕР·РґР°СЋС‰РёР№ РјР°С‚СЂРёС†Сѓ Р·Р°РґР°РЅРЅРѕРіРѕ СЂР°Р·РјРµСЂР°*/
 template <typename T> matrix<T>::matrix(size_t r, size_t c): rows(r), columns(c), matr_ptr(0)
 {
     matr_ptr = new T*[rows];
@@ -25,7 +25,7 @@ template <typename T> matrix<T>::matrix(size_t r, size_t c): rows(r), columns(c)
     }
 }
 
-/*Метод, освобождающий память, занятую матрицей*/
+/*РњРµС‚РѕРґ, РѕСЃРІРѕР±РѕР¶РґР°СЋС‰РёР№ РїР°РјСЏС‚СЊ, Р·Р°РЅСЏС‚СѓСЋ РјР°С‚СЂРёС†РµР№*/
 template <typename T> void matrix<T>::destroy()
 {
     for(size_t i = 0; i != rows; ++i)
@@ -38,7 +38,7 @@ template <typename T> void matrix<T>::destroy()
     columns = 0;
 }
 
-/*Метод выделяющий память под элементы матрицы и копирующий их из другой матрицы*/
+/*РњРµС‚РѕРґ РІС‹РґРµР»СЏСЋС‰РёР№ РїР°РјСЏС‚СЊ РїРѕРґ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС†С‹ Рё РєРѕРїРёСЂСѓСЋС‰РёР№ РёС… РёР· РґСЂСѓРіРѕР№ РјР°С‚СЂРёС†С‹*/
 template <typename T> template <typename TR> void
 matrix<T>::copy_elems(const matrix<TR>& M)
 {
@@ -68,13 +68,13 @@ template <typename T> T** matrix<T>::allocate_elems(size_t r, size_t c)
     return res_ptr;
 }
 
-/*Конструктор копирования*/
+/*РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РєРѕРїРёСЂРѕРІР°РЅРёСЏ*/
 template <typename T> matrix<T>::matrix(const matrix &M): rows(M.rows), columns(M.columns), matr_ptr(0)
 {
     copy_elems(M);
 }
 
-/*Оператор присваивания*/
+/*РћРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІР°РёРІР°РЅРёСЏ*/
 template <typename T> matrix<T>&
 matrix<T>::operator=(const matrix<T> &M)
 {
@@ -83,13 +83,13 @@ matrix<T>::operator=(const matrix<T> &M)
     return *this;
 }
 
-/*Деструктор*/
+/*Р”РµСЃС‚СЂСѓРєС‚РѕСЂ*/
 template <typename T> matrix<T>::~matrix()
 {
     destroy();
 }
 
-/*Метод для заполнения матрицы заданным значением*/
+/*РњРµС‚РѕРґ РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ РјР°С‚СЂРёС†С‹ Р·Р°РґР°РЅРЅС‹Рј Р·РЅР°С‡РµРЅРёРµРј*/
 template <typename T> void matrix<T>::fill(const T &orig)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -101,14 +101,14 @@ template <typename T> void matrix<T>::fill(const T &orig)
     }
 }
 
-/*Метод для присвоения другой матрицы совместимого типа*/
+/*РњРµС‚РѕРґ РґР»СЏ РїСЂРёСЃРІРѕРµРЅРёСЏ РґСЂСѓРіРѕР№ РјР°С‚СЂРёС†С‹ СЃРѕРІРјРµСЃС‚РёРјРѕРіРѕ С‚РёРїР°*/
 template <typename T> template <typename TR> void matrix<T>::assign(const matrix<TR> &M)
 {
     destroy();
     copy_elems(M);
 }
 
-/*Метод, копирующий заданную область из другой матрицы*/
+/*РњРµС‚РѕРґ, РєРѕРїРёСЂСѓСЋС‰РёР№ Р·Р°РґР°РЅРЅСѓСЋ РѕР±Р»Р°СЃС‚СЊ РёР· РґСЂСѓРіРѕР№ РјР°С‚СЂРёС†С‹*/
 template <typename T> template <typename TR> void matrix<T>::copyArea(size_t dest_row, size_t dest_col,
                                      size_t row_count, size_t col_count, matrix<TR> &src,
                                      size_t src_row, size_t src_col)
@@ -131,7 +131,7 @@ template <typename T> template <typename TR> void matrix<T>::copyArea(size_t des
     }
 }
 
-/*Метод, возвращающий ссылку на элемент матрицы*/
+/*РњРµС‚РѕРґ, РІРѕР·РІСЂР°С‰Р°СЋС‰РёР№ СЃСЃС‹Р»РєСѓ РЅР° СЌР»РµРјРµРЅС‚ РјР°С‚СЂРёС†С‹*/
 template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
 {
     if(r > rows || c > columns)
@@ -141,7 +141,7 @@ template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
     return matr_ptr[r][c];
 }
 
-/*Константный метод, возвращающий константную ссылку на элемент матрицы*/
+/*РљРѕРЅСЃС‚Р°РЅС‚РЅС‹Р№ РјРµС‚РѕРґ, РІРѕР·РІСЂР°С‰Р°СЋС‰РёР№ РєРѕРЅСЃС‚Р°РЅС‚РЅСѓСЋ СЃСЃС‹Р»РєСѓ РЅР° СЌР»РµРјРµРЅС‚ РјР°С‚СЂРёС†С‹*/
 template <typename T> const T& matrix<T>::operator()(size_t r, size_t c) const
 {
     if(r > rows || c > columns)
@@ -151,7 +151,7 @@ template <typename T> const T& matrix<T>::operator()(size_t r, size_t c) const
     return matr_ptr[r][c];
 }
 
-/*Составной оператор присвоения для сложения матриц*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ СЃР»РѕР¶РµРЅРёСЏ РјР°С‚СЂРёС†*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(const matrix<TR> &rhs)
 {
     if(rows != rhs.rows || columns != rhs.columns)
@@ -170,7 +170,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(co
     return *this;
 }
 
-/*Составной оператор присвоения для вычитания матриц*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ РІС‹С‡РёС‚Р°РЅРёСЏ РјР°С‚СЂРёС†*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(const matrix<TR> &rhs)
 {
     if(rows != rhs.rows || columns != rhs.columns)
@@ -189,7 +189,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(co
     return *this;
 }
 
-/*Составной оператор присвоения для деления матрицы на заданное значение*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ РґРµР»РµРЅРёСЏ РјР°С‚СЂРёС†С‹ РЅР° Р·Р°РґР°РЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(const matrix<TR> &rhs)
 {
     if(rhs.getRows() != 1 || rhs.getColumns() != 1)
@@ -202,7 +202,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(co
     return *this;
 }
 
-/*Составной оператор присвоения для сложения матрицы с заданным значением*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ СЃР»РѕР¶РµРЅРёСЏ РјР°С‚СЂРёС†С‹ СЃ Р·Р°РґР°РЅРЅС‹Рј Р·РЅР°С‡РµРЅРёРµРј*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -216,7 +216,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(co
     return *this;
 }
 
-/*Составной оператор присвоения для вычитания из матрицы заданного значения*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ РІС‹С‡РёС‚Р°РЅРёСЏ РёР· РјР°С‚СЂРёС†С‹ Р·Р°РґР°РЅРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -230,7 +230,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(co
     return *this;
 }
 
-/*Составной оператор присвоения для умножения матрицы на заданное значение*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ СѓРјРЅРѕР¶РµРЅРёСЏ РјР°С‚СЂРёС†С‹ РЅР° Р·Р°РґР°РЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator*=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -244,7 +244,7 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator*=(co
     return *this;
 }
 
-/*Составной оператор присвоения для деления матрицы на заданное значение*/
+/*РЎРѕСЃС‚Р°РІРЅРѕР№ РѕРїРµСЂР°С‚РѕСЂ РїСЂРёСЃРІРѕРµРЅРёСЏ РґР»СЏ РґРµР»РµРЅРёСЏ РјР°С‚СЂРёС†С‹ РЅР° Р·Р°РґР°РЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ*/
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -350,7 +350,7 @@ template <typename T> T matrix<T>::recurse_det(size_t order)
     return result;
 }
 
-/*Метод, осуществляющий умножение матриц*/
+/*РњРµС‚РѕРґ, РѕСЃСѓС‰РµСЃС‚РІР»СЏСЋС‰РёР№ СѓРјРЅРѕР¶РµРЅРёРµ РјР°С‚СЂРёС†*/
 template <typename T> template <typename T1, typename T2>
 void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
 {
@@ -395,7 +395,7 @@ void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
     }
 }
 
-template <typename T> void print_matr(ostream &os, const matrix<T> &M)
+template <typename T> std::ostream& operator <<(ostream &os, const matrix<T> &M)
 {
     for(size_t i = 0; i != M.getRows(); ++i)
     {
@@ -405,6 +405,7 @@ template <typename T> void print_matr(ostream &os, const matrix<T> &M)
         }
         os << std::endl;
     }
+    return os;
 }
 
 template <typename T> bool* matrix<T>::rows_flags = 0;

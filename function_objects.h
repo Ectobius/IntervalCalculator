@@ -76,6 +76,16 @@ class func_det : public function_object
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };
 
+class func_re_split : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_subdiff : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
 
 }
 

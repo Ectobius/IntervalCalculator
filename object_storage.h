@@ -25,6 +25,23 @@ public:
 
 };
 
+class named_object
+{
+public:
+    named_object(const std::string &nam, stored_object *obj) :
+        name(nam), object(obj)
+    {
+
+    }
+
+    const std::string& getName() { return name; }
+    stored_object* getObject() { return object; }
+
+private:
+    std::string name;
+    stored_object *object;
+};
+
 class matrix_object : public stored_object
 {
 public:
@@ -146,12 +163,12 @@ class object_storage
 {
 public:
     virtual void addObject(const std::string &, stored_object *) = 0;
-    virtual void deleteObject(std::string &) = 0;
+    virtual void deleteObject(const std::string &) = 0;
     virtual stored_object* getObjectByName(const std::string&) = 0;
     virtual void clear() = 0;
 
-    virtual stored_object* getFirst() = 0;
-    virtual stored_object* getNext() = 0;
+    virtual named_object getFirst() = 0;
+    virtual named_object getNext() = 0;
 
     virtual ~object_storage() { }
 
@@ -162,12 +179,12 @@ class map_object_storage : public object_storage
 {
 public:
     virtual void addObject(const std::string &, stored_object *);
-    virtual void deleteObject(std::string &);
+    virtual void deleteObject(const std::string &);
     virtual stored_object* getObjectByName(const std::string&);
     virtual void clear();
 
-    virtual stored_object* getFirst();
-    virtual stored_object* getNext();
+    virtual named_object getFirst();
+    virtual named_object getNext();
 
     virtual ~map_object_storage() { destroy(); }
 

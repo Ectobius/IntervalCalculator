@@ -1,4 +1,4 @@
-#ifndef INTERVAL_EXT_H
+﻿#ifndef INTERVAL_EXT_H
 #define INTERVAL_EXT_H
 
 #include "boost/numeric/interval.hpp"
