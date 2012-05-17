@@ -1,3 +1,4 @@
+#include <QtGui>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <string>
@@ -6,6 +7,8 @@
 #include "matrix.h"
 #include "interval_ext.h"
 #include "function_objects.h"
+#include "signalingstorage.h"
+#include "matrixsavingdialog.h"
 #include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -15,16 +18,38 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    storage = new map_object_storage();
+
+
+    SignalingStorage *signStor = new SignalingStorage();
+    connect(&signStor->changedSignal, SIGNAL(signal()), this, SLOT(updateVariableList()));
+    storage = signStor;
+
     interpreter = new expression_interpreter(storage);
 
     load_function_objects(storage);
 
-    //���������� ������ � ���������
+    matrixEditingDialog = new MatrixEditingDialog(this, storage);
+
+    //Соединение слотов с сигналами
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->executeButton, SIGNAL(clicked()), this, SLOT(executeCommand()));
     connect(ui->commandLineEdit, SIGNAL(returnPressed()), this, SLOT(executeCommand()));
-    connect(ui->commandLineEdit, SIGNAL(), this, SLOT(executeCommand()));
+    connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+            this, SLOT(editMatrix(QListWidgetItem*)));
+    connect(ui->addVarPushButton, SIGNAL(clicked()),
+            this, SLOT(addMatrix()));
+    connect(ui->delVarPushButton, SIGNAL(clicked()),
+            this, SLOT(deleteMatrix()));
+    connect(ui->actionSaveVariables, SIGNAL(triggered()),
+            this, SLOT(saveVariables()));
+    connect(ui->actionLoadVariables, SIGNAL(triggered()),
+            this, SLOT(loadVariables()));
+
+    //
+    QList<int> splitSisez;
+    splitSisez.append(this->width() * 0.25);
+    splitSisez.append(this->width() * 0.75);
+    ui->splitter->setSizes(splitSisez);
 
 }
 
@@ -65,14 +90,14 @@ void MainWindow::executeCommand()
             numeric_matrix_object *num_obj =
                     dynamic_cast<numeric_matrix_object*>(obj);
 
-            print_matr(sStream, num_obj->getMatrix());
+            sStream << num_obj->getMatrix();
         }
         else if(dynamic_cast<interval_matrix_object*>(obj))
         {
             interval_matrix_object *interval_obj =
                     dynamic_cast<interval_matrix_object*>(obj);
 
-            print_matr(sStream, interval_obj->getMatrix());
+            sStream << interval_obj->getMatrix();
         }
         else
         {
@@ -110,6 +135,199 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
             if(currentCommandIndex < commands.size() - 1)
                 ++currentCommandIndex;
             ui->commandLineEdit->setText(commands[currentCommandIndex]);
+        }
+    }
+}
+
+void MainWindow::updateVariableList()
+{
+    ui->listWidget->clear();
+    for(named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
+    {
+        if(dynamic_cast<matrix_object*>(obj.getObject()))
+        {
+            ui->listWidget->addItem(QString(obj.getName().c_str()));
+        }
+    }
+
+}
+
+void MainWindow::editMatrix(QListWidgetItem *item)
+{
+    std::string name = item->text().toStdString();
+    matrixEditingDialog->setMatrixName(QString(name.c_str()));
+    stored_object *obj = storage->getObjectByName(name);
+    if(dynamic_cast<matrix_object*>(obj))
+    {
+        matrix_object *matrObj =
+                dynamic_cast<matrix_object*>(obj);
+        matrixEditingDialog->setEditedMatrix(matrObj);
+        matrixEditingDialog->exec();
+    }
+}
+
+void MainWindow::addMatrix()
+{
+    std::string name("untitled");
+    if(storage->getObjectByName(name))
+    {
+        int num = 1;
+        while(storage->getObjectByName(name +
+                                       QString::number(num++).toStdString()));
+        name += QString::number(num - 1).toStdString();
+    }
+    numeric_matrix_object *numObj =
+            new numeric_matrix_object(1, 1);
+    numObj->getMatrix()(0, 0) = 0;
+    storage->addObject(name, numObj);
+
+    matrixEditingDialog->setMatrixName(QString(name.c_str()));
+    matrixEditingDialog->setEditedMatrix(numObj);
+    matrixEditingDialog->exec();
+}
+
+void MainWindow::deleteMatrix()
+{
+    if(ui->listWidget->selectedItems().isEmpty())
+    {
+        QMessageBox::warning(this, "",
+                             QString::fromUtf8("Выделите элемент списка"));
+        return;
+    }
+    QListWidgetItem *item =
+            ui->listWidget->selectedItems()[0];
+    storage->deleteObject(item->text().toStdString());
+}
+
+void MainWindow::saveVariables()
+{
+    MatrixSavingDialog savingDialog(storage, this);
+    savingDialog.exec();
+}
+
+void MainWindow::loadVariables()
+{
+    QString fileName =
+            QFileDialog::getOpenFileName(this, QString::fromUtf8("Открыть"),
+                                         ".", QString::fromUtf8("Текстовые файлы (*.txt);;Все файлы (*.*)"));
+    if(fileName.isEmpty())
+    {
+       return;
+    }
+
+    QFile file(fileName);
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(this, "",
+                             QString::fromUtf8("Ошибка при открытии файла"));
+        return;
+    }
+
+    QList<named_object> objList;
+    QTextStream inStream(&file);
+
+    try
+    {
+        loadVariablesToList(objList, inStream);
+        file.close();
+    }
+    catch(runtime_error err)
+    {
+        QMessageBox::warning(this, "",
+                             QString::fromUtf8("Ошибка при чтении файла"));
+        return;
+    }
+
+    for(int i = 0; i != objList.size(); ++i)
+    {
+        stored_object *obj = storage->getObjectByName(objList[i].getName());
+        if(dynamic_cast<function_object*>(obj))
+        {
+            delete objList[i].getObject();
+
+        }
+        else
+        {
+            storage->addObject(objList[i].getName(), objList[i].getObject());
+        }
+    }
+}
+
+void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inStream)
+{
+    QString curStr;
+    QString name;
+    int rows = 0, columns = 0;
+    interval_matrix_object *intervalObj = 0;
+    QRegExp elemRegExp("\\s*(\\[\\s*-?\\d+(\\.\\d+)?([eE][+-]\\d+)?\\s*;"
+        "\\s*-?\\d+(\\.\\d+)?([eE][+-]\\d+)?\\s*\\]|-?\\d+(\\.\\d+)?([eE][+-]\\d+)?)\\s*");
+    QRegExp intervalRegExp("\\s*\\[\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s*;"
+            "\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s*\\]\\s*");
+    QRegExp numberRegExp("\\s*-?\\d+(\\.\\d+)?([eE][+-]\\d+)?\\s*");
+    bool end = false;
+    while(!end)
+    {
+        do
+        {
+            inStream >> curStr;
+        }
+        while(curStr.isEmpty() && !inStream.atEnd());
+        if(inStream.atEnd())
+            break;
+        name = curStr;
+        inStream >> rows >> columns;
+        if(rows <= 0 || columns <= 0)
+        {
+            throw runtime_error("File has wrong format");
+        }
+
+        intervalObj = new interval_matrix_object(rows, columns);
+        inStream.readLine();
+        QString elemStr;
+        bool isInterval = false;
+        for(int i = 0; i != rows; ++i)
+        {
+            int index = 0;
+            curStr = inStream.readLine();
+            for(int j = 0; j != columns; ++j)
+            {
+                index = elemRegExp.indexIn(curStr, index);
+                elemStr = elemRegExp.cap(0);
+                if(intervalRegExp.exactMatch(elemStr))
+                {
+                    isInterval = true;
+                    intervalRegExp.indexIn(elemStr);
+                    double val1 = intervalRegExp.cap(1).toDouble();
+                    double val2 = intervalRegExp.cap(2).toDouble();
+                    intervalObj->getMatrix()(i, j) = d_interval(val1, val2);
+                }
+                else if(numberRegExp.exactMatch(elemStr))
+                {
+                    numberRegExp.indexIn(elemStr);
+                    double val = numberRegExp.cap(0).toDouble();
+                    intervalObj->getMatrix()(i, j) = val;
+                }
+                else
+                {
+                    throw runtime_error("File reading error");
+                }
+                index += elemRegExp.matchedLength();
+            }
+        }
+
+        if(isInterval)
+        {
+            lst.push_back(named_object(name.toStdString(), intervalObj));
+        }
+        else
+        {
+            numeric_matrix_object *numObj =
+                    new numeric_matrix_object(intervalObj->getRows(), intervalObj->getColumns());
+            for(int i = 0; i != intervalObj->getRows(); ++i)
+                for(int j = 0; j != intervalObj->getColumns(); ++j)
+                    numObj->getMatrix()(i, j) = intervalObj->getMatrix()(i, j).lower();
+            delete intervalObj;
+            lst.push_back(named_object(name.toStdString(), numObj));
         }
     }
 }

@@ -1,4 +1,4 @@
-#ifndef INTERVAL_EXT_CPP
+﻿#ifndef INTERVAL_EXT_CPP
 #define INTERVAL_EXT_CPP
 
 #include "interval_ext.h"

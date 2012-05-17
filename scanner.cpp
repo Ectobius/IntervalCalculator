@@ -1,4 +1,4 @@
-#include "scanner.h"
+﻿#include "scanner.h"
 #include <cctype>
 
 using namespace std;

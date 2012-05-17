@@ -2,8 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QListWidget>
+#include <QTextStream>
+#include <QList>
 #include "object_storage.h"
 #include "expression_interpreter.h"
+#include "matrixeditingdialog.h"
 
 using namespace int_calc;
 
@@ -22,13 +26,22 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    MatrixEditingDialog *matrixEditingDialog;
     object_storage *storage;
     expression_interpreter *interpreter;
     QStringList commands;
     int currentCommandIndex;
 
+    void loadVariablesToList(QList<named_object> &lst, QTextStream &inStream);
+
 private slots:
     void executeCommand();
+    void updateVariableList();
+    void editMatrix(QListWidgetItem *item);
+    void addMatrix();
+    void deleteMatrix();
+    void saveVariables();
+    void loadVariables();
 
 protected:
     void keyPressEvent(QKeyEvent *keyEvent);

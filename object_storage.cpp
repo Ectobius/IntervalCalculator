@@ -28,7 +28,7 @@ void map_object_storage::addObject(const std::string &nam, stored_object *obj)
     }
 }
 
-void map_object_storage::deleteObject(std::string &nam)
+void map_object_storage::deleteObject(const std::string &nam)
 {
     storage_type::iterator iter = storage.find(nam);
     storage.erase(iter);
@@ -52,29 +52,33 @@ void map_object_storage::clear()
     storage.clear();
 }
 
-stored_object* map_object_storage::getFirst()
+named_object map_object_storage::getFirst()
 {
     cur_object = storage.begin();
     if(cur_object != storage.end())
     {
-        return cur_object->second;
+        return named_object(cur_object->first, cur_object->second);
     }
     else
     {
-        return 0;
+        stored_object *nullObj = 0;
+        std::string str;
+        return named_object(std::string(), 0);
     }
 }
 
-stored_object* map_object_storage::getNext()
+named_object  map_object_storage::getNext()
 {
     ++cur_object;
     if(cur_object != storage.end())
     {
-        return cur_object->second;
+        return named_object(cur_object->first, cur_object->second);
     }
     else
     {
-        return 0;
+        stored_object *nullObj = storage.begin()->second;
+        std::string str;
+        return named_object(std::string(), 0);
     }
 }
 
@@ -222,7 +226,7 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
-//Оператор минус
+//РћРїРµСЂР°С‚РѕСЂ РјРёРЅСѓСЃ
 matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;

@@ -1,4 +1,4 @@
-#ifndef EXPR_EXCEPT_H
+﻿#ifndef EXPR_EXCEPT_H
 #define EXPR_EXCEPT_H
 
 #include <stdexcept>

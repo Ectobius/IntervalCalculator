@@ -50,6 +50,8 @@ public:
 
     matrix& transp();
     T det();
+    T trace();
+    void leverrier(matrix &pol);
 
 
     template <typename T1, typename T2>
@@ -71,7 +73,7 @@ private:
     static bool* columns_flags;
 };
 
-template <typename T> void print_matr(std::ostream &os, const matrix<T> &M);
+template <typename T> std::ostream& operator <<(std::ostream &os, const matrix<T> &M);
 
 }
 
