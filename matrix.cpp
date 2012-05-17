@@ -1,6 +1,7 @@
 #ifndef MATRIX_CPP
 #define MATRIX_CPP
 
+#include <vector>
 #include "matrix.h"
 
 
@@ -348,6 +349,49 @@ template <typename T> T matrix<T>::recurse_det(size_t order)
         rows_flags[initRow] = false;
     }
     return result;
+}
+
+template <typename T> T matrix<T>::trace()
+{
+    if(rows != columns)
+    {
+        throw size_mismatch("It is not a square matrix");
+    }
+    T result = T(0);
+    for(size_t i = 0; i != rows; ++i)
+    {
+        result += matr_ptr[i][i];
+    }
+    return result;
+}
+
+template <typename T> void matrix<T>::leverrier(matrix<T> &pol)
+{
+    if(rows != columns)
+    {
+        throw size_mismatch("It is not a square matrix");
+    }
+    pol.assign(matrix<T>(1, rows + 1));
+    pol.fill(T(0));
+    pol(0, 0) = 1;
+
+    matrix<T> A(*this);
+    matrix<T> mult(*this);
+    vector<T> traces(rows);
+    T sum(0);
+    for(size_t i = 1; i <= rows; ++i)
+    {
+        traces[i - 1] = A.trace();
+        sum = T(0);
+        for(size_t j = 0; j < i; ++j)
+        {
+            sum += pol(0, j) * traces[i - j - 1];
+        }
+        pol(0, i) = -sum / (double)(i);
+        matrix<T>::multiply(mult, A, *this);
+        A = mult;
+    }
+
 }
 
 /*Метод, осуществляющий умножение матриц*/

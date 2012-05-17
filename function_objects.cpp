@@ -57,6 +57,12 @@ void load_function_objects(object_storage *stor)
     func = new func_subdiff();
     stor->addObject("subdiff", func);
 
+    func = new func_leverrier();
+    stor->addObject("leverrier", func);
+
+    func = new func_is_stable();
+    stor->addObject("isStable", func);
+
 }
 
 stored_object* func_plus::operator ()(vector<stored_object*> &args)
@@ -448,7 +454,7 @@ stored_object* func_det::operator ()(vector<stored_object*> &args)
         numeric_matrix_object *num_res =
                 new numeric_matrix_object(1, 1);
         num_res->getMatrix()(0, 0) =
-                dynamic_cast<numeric_matrix_object*>(args[0])->getMatrix().det();
+                num_methods::determinant(dynamic_cast<numeric_matrix_object*>(args[0])->getMatrix());
         res = num_res;
     }
     else if(dynamic_cast<interval_matrix_object*>(args[0]))
@@ -652,6 +658,88 @@ stored_object* func_subdiff::operator ()(vector<stored_object*> &args)
     delete x;
 
     return result;
+}
+
+stored_object* func_leverrier::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+    if(matrix_object *matr_arg =
+            dynamic_cast<matrix_object*>(args[0]))
+    {
+        if(matr_arg->getRows() != matr_arg->getColumns())
+        {
+            throw wrong_type("Expected a square matrix");
+        }
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    matrix_object *res = 0;
+    if(numeric_matrix_object *num_arg = dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        numeric_matrix_object *num_res =
+                new numeric_matrix_object(1, num_arg->getRows() + 1);
+        num_arg->getMatrix().leverrier(num_res->getMatrix());
+        res = num_res;
+    }
+    else if(interval_matrix_object *interval_arg = dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_matrix_object *interval_res =
+                new interval_matrix_object(1, interval_arg->getRows() + 1);
+        interval_arg->getMatrix().leverrier(interval_res->getMatrix());
+        res = interval_res;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+    return res;
+}
+
+stored_object* func_is_stable::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+    if(matrix_object *matr_arg =
+            dynamic_cast<matrix_object*>(args[0]))
+    {
+        if(matr_arg->getRows() != 1)
+        {
+            throw wrong_type("Expected row vector");
+        }
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    matrix_object *res = 0;
+    if(numeric_matrix_object *num_arg = dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        numeric_matrix_object *num_res =
+                new numeric_matrix_object(1, 1);
+        num_res->getMatrix()(0, 0) = num_methods::isStablePolynom(num_arg->getMatrix());
+        res = num_res;
+    }
+    else if(interval_matrix_object *interval_arg = dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        numeric_matrix_object *num_res =
+                new numeric_matrix_object(1, 1);
+        num_res->getMatrix()(0, 0) = num_methods::haritonovCritery(interval_arg->getMatrix());
+        res = num_res;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+    return res;
 }
 
 }

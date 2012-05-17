@@ -50,6 +50,8 @@ public:
 
     matrix& transp();
     T det();
+    T trace();
+    void leverrier(matrix &pol);
 
 
     template <typename T1, typename T2>

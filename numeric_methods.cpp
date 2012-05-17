@@ -440,5 +440,140 @@ int subdiff(int dim, double *A, double *b, double *x, double eps, double tau, in
     return 1;
 }
 
+
+double determinant(matrix<double> &matr)
+{
+    if(matr.getRows() != matr.getColumns())
+    {
+        throw size_mismatch("Expected square matrix");
+    }
+    matrix<double> tmpMatr = matr;
+    size_t n = matr.getRows();
+    size_t exchCount = 0;
+    double det = 0;
+
+    for(size_t i = 0; i < n - 1; ++i)
+    {
+        double tmpd = fabs(tmpMatr(i, i));
+        if(fabs(tmpMatr(i, i)) < epsilon)
+        {
+            double maxAbs = 0;
+            size_t indMax = 0;
+            for(size_t j = i + 1; j < n; ++j)
+            {
+                if(abs(tmpMatr(j, i)) > maxAbs)
+                {
+                    maxAbs = abs(tmpMatr(j, i));
+                    indMax = j;
+                }
+            }
+            if(maxAbs < epsilon)
+            {
+                return 0;
+            }
+            double d = 0;
+            for(size_t j = 0; j < n; ++j)
+            {
+                d = tmpMatr(i, j);
+                tmpMatr(i, j) = tmpMatr(indMax, j);
+                tmpMatr(indMax, j) = d;
+            }
+            ++exchCount;
+        }
+        for(size_t j = i + 1; j < n; ++j)
+        {
+            double c = -tmpMatr(j, i) / tmpMatr(i, i);
+            for(size_t k = i + 1; k < n; ++k)
+            {
+                tmpMatr(j, k) += c * tmpMatr(i, k);
+            }
+        }
+    }
+
+    det = exchCount % 2 ? -1 : 1;
+    for(size_t i = 0; i < n; ++i)
+    {
+        det *= tmpMatr(i, i);
+    }
+    return det;
+}
+
+bool isStablePolynom(matrix<double> &poly)
+{
+    if (poly.getRows() != 1)
+    {
+        throw size_mismatch("Expected row vector");
+    }
+
+    size_t n = poly.getColumns() - 1;
+    matrix<double> tmpPoly = poly;
+
+    for (size_t i = 0; i != tmpPoly.getColumns(); ++i)
+    {
+        tmpPoly(0, i) /= tmpPoly(0, 0);
+    }
+
+    matrix<double> gurvitsMatr(n, n);
+    gurvitsMatr.fill(0);
+    int startIndPoly = 1;
+    for (size_t i = 0; i != n; ++i)
+    {
+        int indPoly = startIndPoly;
+        for(size_t j = 0; j != n && indPoly >= 0; ++j, --indPoly)
+        {
+            if(indPoly <= n)
+                gurvitsMatr(i, j) = tmpPoly(0, indPoly);
+            else
+                gurvitsMatr(i, j) = 0;
+        }
+        startIndPoly += 2;
+    }
+
+    matrix<double> mainMinor;
+    double det = 0;
+    bool isStable = true;
+    for (size_t i = 0; i != n; ++i)
+    {
+        mainMinor = matrix<double>(i + 1, i + 1);
+        mainMinor.copyArea(0, 0, i + 1, i + 1, gurvitsMatr, 0, 0);
+        det = determinant(mainMinor);
+        if(det <= epsilon)
+        {
+            isStable = false;
+            break;
+        }
+    }
+    return isStable;
+}
+
+bool haritonovCritery(matrix<d_interval> &poly)
+{
+    int n = poly.getColumns() - 1;
+    matrix<double> num_poly(1, n + 1);
+    bool isStable = true;
+
+    for (int i = 0; i < 4 && isStable; ++i)
+    {
+        int magic = i;
+        for (int j = n; j >= 0; --j)
+        {
+            if(magic == 0 || magic == 1)
+            {
+                num_poly(0, j) = poly(0, j).lower();
+            }
+            else
+            {
+                num_poly(0, j) = poly(0, j).upper();
+            }
+            ++magic;
+            magic %= 4;
+        }
+        if(!isStablePolynom(num_poly))
+            isStable = false;
+    }
+
+    return isStable;
+}
+
 }
 }
