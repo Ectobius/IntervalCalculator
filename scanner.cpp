@@ -26,7 +26,7 @@ scanner::lexem_type scanner::scanNext(std::string &lex)
 {
     lex = string();
     scanner_state cur_state = initial;
-    lexem_type result;
+    lexem_type result = scanner::error_type;
 
     while(cur_state != final)
     {
@@ -235,6 +235,8 @@ scanner::lexem_type scanner::scanNext(std::string &lex)
                 cur_state = initial;
                 doInc = false;
             }
+            break;
+        case final:
             break;
         }  // end of switch(cur_state)
 
