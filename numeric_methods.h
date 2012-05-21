@@ -16,6 +16,12 @@ int subdiff(int dim, double *A, double *b, double *x, double eps, double tau, in
 double determinant(matrix<double> &matr);
 bool isStablePolynom(matrix<double> &poly);
 bool haritonovCritery(matrix<d_interval> &poly);
+bool inverseMatrix(matrix<double> &matr, matrix<double> &res);
+matrix<double>& designFeedbackControl(matrix<d_interval> &A,
+                                          matrix<d_interval> &b, matrix<d_interval> &D);
+
+void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
+                   double t0, double t1, vector< matrix<d_interval> > &res);
 
 }
 }

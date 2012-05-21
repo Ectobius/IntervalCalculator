@@ -9,6 +9,8 @@
 
 #include "numeric_methods.h"
 
+using namespace boost::numeric;
+
 namespace int_calc
 {
 namespace num_methods
@@ -573,6 +575,226 @@ bool haritonovCritery(matrix<d_interval> &poly)
     }
 
     return isStable;
+}
+
+bool inverseMatrix(matrix<double> &matr, matrix<double> &res)
+{
+    if(matr.getRows() != matr.getColumns())
+    {
+        throw size_mismatch("Expected square matrix");
+    }
+    matrix<double> tmpMatr = matr;
+    size_t n = matr.getRows();
+    size_t exchCount = 0;
+
+    vector<int> rowsNumbers(n);
+    for (int i = 0; i < n; ++i)
+        rowsNumbers[i] = i;
+
+    for (size_t i = 0; i < n - 1; ++i)
+    {
+        double tmpd = fabs(tmpMatr(i, i));
+        if (fabs(tmpMatr(i, i)) < epsilon)
+        {
+            double maxAbs = 0;
+            size_t indMax = 0;
+            for (size_t j = i + 1; j < n; ++j)
+            {
+                if(abs(tmpMatr(j, i)) > maxAbs)
+                {
+                    maxAbs = abs(tmpMatr(j, i));
+                    indMax = j;
+                }
+            }
+            if (maxAbs < epsilon)
+            {
+                return false;
+            }
+            double d = 0;
+            for (size_t j = i; j < n; ++j)
+            {
+                d = tmpMatr(i, j);
+                tmpMatr(i, j) = tmpMatr(indMax, j);
+                tmpMatr(indMax, j) = d;
+            }
+            ++exchCount;
+            rowsNumbers[i] = indMax;
+        }
+        for (size_t j = i + 1; j < n; ++j)
+        {
+            double c = -tmpMatr(j, i) / tmpMatr(i, i);
+            tmpMatr(j, i) = c;
+            for (size_t k = i + 1; k < n; ++k)
+            {
+                tmpMatr(j, k) += c * tmpMatr(i, k);
+            }
+        }
+    }
+
+    matrix<double> predRes(n, n);
+
+    matrix<double> b(n, 1);
+    for (int h = 0; h < n; ++h)
+    {
+        b.fill(0);
+        b(h, 0) = 1;
+
+        for (int i = 0; i < n - 1; ++i)
+        {
+            if (rowsNumbers[i] != i)
+            {
+                double d = b(i, 0);
+                b(i, 0) = b(rowsNumbers[i], 0);
+                b(rowsNumbers[i], 0) = d;
+            }
+            for (int j = i + 1; j < n; ++j)
+            {
+                b(j, 0) += tmpMatr(j, i) * b(i, 0);
+            }
+        }
+
+        for (int i = n - 1; i >= 0; --i)
+        {
+            predRes(i, h) = b(i, 0) / tmpMatr(i, i);
+            for (size_t j = i + 1; j < n; ++j)
+            {
+                predRes(i, h) -= tmpMatr(i, j) * predRes(j, h) / tmpMatr(i, i);
+            }
+        }
+    }
+
+    if (res.getRows() != n ||
+            res.getColumns() != n)
+    {
+        res = matrix<double>(n, n);
+    }
+
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+        {
+            res(i, j) = predRes(i, j);
+        }
+
+    return true;
+}
+
+matrix<double>& designFeedbackControl(matrix<d_interval> &A,
+                                          matrix<d_interval> &b, matrix<d_interval> &D)
+{
+    if (A.getRows() != A.getColumns())
+    {
+        throw size_mismatch("Expected square matrix");
+    }
+    if (A.getRows() != b.getRows())
+    {
+        throw size_mismatch("Sizes of matrices do not match");
+    }
+    if (b.getColumns() != 1)
+    {
+        throw size_mismatch("Expected column vector");
+    }
+    if (D.getRows() != 1)
+    {
+        throw size_mismatch("Expected row vector");
+    }
+    if (D.getColumns() != A.getColumns() + 1)
+    {
+        throw size_mismatch("Sizes of matrices do not match");
+    }
+
+    int n = A.getRows();  //Порядок системы
+    matrix<d_interval> Y =  //Матрица управляемости
+            matrix<d_interval>(n, n);
+
+    //Построение матрицы управляемости
+    formControllabilityMatrix(A, b, Y);
+
+    matrix<d_interval> charact_poly(1, n + 1);  //Характеристический многочлен
+
+    //Построение характеристического многочлена
+    A.leverrier(charact_poly);
+
+    //Проверка ширины коэффициентов
+    bool isWider = true;
+    for (int i = 1; i <= n && isWider; ++i)
+    {
+        if (width(charact_poly(0, i)) >= width(D(0, i)))
+        {
+            isWider = false;
+        }
+    }
+
+    if (!isWider)
+    {
+        throw runtime_error("Criterion is not satisfied");
+    }
+
+    matrix<d_interval> polyMatr(n, n);  //Матрица на основе коэффициентов хар. полинома
+    polyMatr.fill(0);
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = i; j < n; ++j)
+        {
+            polyMatr(i, j - i) = -charact_poly(0, n - j - 1);
+        }
+    }
+
+    matrix<d_interval> P(n, n);
+
+    matrix<d_interval>::multiply(P, Y, polyMatr);
+
+    matrix<d_interval> f(1, n);
+    for (int i = 0; i < n; ++i)
+    {
+        f(0, i) = d_interval(D(0, n - i).lower() - charact_poly(0, n - i).lower(),
+                             D(0, n - i).upper() - charact_poly(0, n - i).upper());
+    }
+
+    matrix<double> mf(1, n),
+            mP(n, n);
+
+    for (int i = 0; i < n; ++i)
+    {
+        mf(0, i) = median(f(0, i));
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            mP(i, j) = median(P(i, j));
+        }
+    }
+
+    matrix<double> invMP(n, n);
+
+    inverseMatrix(mP, invMP);
+
+    matrix<double> *k = new matrix<double>(1, n);
+    matrix<double>::multiply(*k, mf, invMP);
+
+    return *k;
+}
+
+void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
+                   double t0, double t1, vector< matrix<d_interval> > &res)
+{
+    int n = x0.getRows();
+    matrix<d_interval> xk = x0,
+            Axk(n, 1);
+
+    int k = 0;
+    double tk = 0;
+
+    while (tk <= t1)
+    {
+        res.push_back(xk);
+        tk = t0 + k * h;
+        matrix<d_interval>::multiply(Axk, A, xk);
+        Axk *= h;
+        xk += Axk;
+        ++k;
+    }
 }
 
 }

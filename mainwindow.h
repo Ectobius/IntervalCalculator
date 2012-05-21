@@ -42,6 +42,7 @@ private slots:
     void deleteMatrix();
     void saveVariables();
     void loadVariables();
+    void modelSystem();
 
 protected:
     void keyPressEvent(QKeyEvent *keyEvent);

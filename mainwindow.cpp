@@ -9,6 +9,7 @@
 #include "function_objects.h"
 #include "signalingstorage.h"
 #include "matrixsavingdialog.h"
+#include "systemmodelingdialog.h"
 #include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -44,6 +45,9 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(saveVariables()));
     connect(ui->actionLoadVariables, SIGNAL(triggered()),
             this, SLOT(loadVariables()));
+
+    connect(ui->actionModeling, SIGNAL(triggered()),
+            this, SLOT(modelSystem()));
 
     //
     QList<int> splitSisez;
@@ -330,4 +334,12 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
             lst.push_back(named_object(name.toStdString(), numObj));
         }
     }
+}
+
+void MainWindow::modelSystem()
+{
+    SystemModelingDialog modelingDialog(storage, this);
+    connect(&dynamic_cast<SignalingStorage*>(storage)->changedSignal, SIGNAL(signal()),
+            &modelingDialog, SLOT(updateMatrixComboBox()));
+    modelingDialog.exec();
 }

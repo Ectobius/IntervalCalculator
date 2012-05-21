@@ -306,6 +306,7 @@ template <typename T> T matrix<T>::det()
 
 template <typename T> T matrix<T>::recurse_det(size_t order)
 {
+    T epsT = T(1e-8);
     T result = T(0);
     T curDet;
     size_t initRow = 0,
@@ -328,25 +329,49 @@ template <typename T> T matrix<T>::recurse_det(size_t order)
     }
     else
     {
-        rows_flags[initRow] = true;
+        size_t chosenRow = initRow;
+        size_t maxZeroCount = 0;
+        for (size_t i = initRow; i != rows; ++i)
+        {
+            size_t zeroCount = 0;
+            if (!rows_flags[i])
+            {
+                for (size_t j = initCol; j != columns; ++j)
+                {
+                    if (!columns_flags[j] &&
+                            matr_ptr[i][j] < epsT && matr_ptr[i][j] > -epsT)
+                    {
+                        ++zeroCount;
+                    }
+                }
+                if (zeroCount > maxZeroCount)
+                {
+                    maxZeroCount = zeroCount;
+                    chosenRow = i;
+                }
+            }
+        }
+
+        rows_flags[chosenRow] = true;
         for(size_t j = initCol; j != columns; ++j)
         {
-            if(!columns_flags[j])
+            if(!columns_flags[j] &&
+                    (matr_ptr[chosenRow][j] < -epsT || matr_ptr[chosenRow][j] > epsT))
             {
                 columns_flags[j] = true;
                 curDet = recurse_det(order - 1);
                 columns_flags[j] = false;
                 if((initRow + j) % 2)
                 {
-                    result -= matr_ptr[initRow][j] * curDet;
+                    result -= matr_ptr[chosenRow][j] * curDet;
                 }
                 else
                 {
-                    result += matr_ptr[initRow][j] * curDet;
+                    result += matr_ptr[chosenRow][j] * curDet;
                 }
             }
         }
-        rows_flags[initRow] = false;
+        rows_flags[chosenRow] = false;
     }
     return result;
 }
@@ -437,6 +462,48 @@ void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
             }
         }
     }
+}
+
+template <typename T> matrix<T>& matrix<T>::eyeMatrix(size_t n)
+{
+    matrix<T> *res = new matrix<T>(n, n);
+    res->fill(T(0));
+    for(size_t i = 0; i != n; ++i)
+        (*res)(i, i) = T(1);
+    return *res;
+}
+
+template <typename T> void formControllabilityMatrix(matrix<T> &A, matrix<T> &B, matrix<T> &res)
+{
+    if (A.getRows() != A.getColumns())
+    {
+        throw size_mismatch("A must be a square matrix");
+    }
+    if (B.getRows() != A.getRows())
+    {
+        throw size_mismatch("Sizes of matrices do not match");
+    }
+
+    int n = A.getRows(),
+            r = B.getColumns();
+
+    if (res.getRows() != n ||
+            res.getColumns() != n * r)
+    {
+        res = matrix<T>(n, n * r);
+    }
+
+    matrix<T> A_n = matrix<T>::eyeMatrix(n), tmp_A_n = A,
+            tmp = B;
+
+    for (int i = 0; i < n; ++i)
+    {
+        res.copyArea(0, i * r, n, r, tmp, 0, 0);
+        matrix<T>::multiply(tmp_A_n, A_n, A);
+        A_n = tmp_A_n;
+        matrix<T>::multiply(tmp, A_n, B);
+    }
+
 }
 
 template <typename T> std::ostream& operator <<(ostream &os, const matrix<T> &M)
