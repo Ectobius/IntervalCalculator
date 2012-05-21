@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     signalizer.cpp \
     matrixeditingdialog.cpp \
     matrixsavingdialog.cpp \
-    numeric_methods.cpp
+    numeric_methods.cpp \
+    systemmodelingdialog.cpp
 SOURCES +=         mainwindow.cpp
 SOURCES +=     scanner.cpp
 SOURCES +=     object_storage.cpp
@@ -24,14 +25,23 @@ SOURCES +=     interval_ext.cpp
 SOURCES +=    function_objects.cpp
 SOURCES +=    expression_interpreter.cpp
 
-INCLUDEPATH = C:\Programming\boost_1_49_0
+INCLUDEPATH += C:\Programming\boost_1_49_0
+INCLUDEPATH += C:\Programming\qwt-6.0.0\src
+
+LIBS += C:\Programming\qwt-6.0.0\lib\qwt.dll
+#LIBS += C:\Programming\qwt-6.0.0\lib\qwtd.dll
+#LIBS += C:\Programming\qwt-6.0.0\lib\qwtmathml.dll
+#LIBS += C:\Programming\qwt-6.0.0\lib\qwtmathmld.dll
+
+CONFIG += qwt
 
 HEADERS  += mainwindow.h \
     signalingstorage.h \
     signalizer.h \
     matrixeditingdialog.h \
     matrixsavingdialog.h \
-    numeric_methods.h
+    numeric_methods.h \
+    systemmodelingdialog.h
 HEADERS  +=     scanner.h
 HEADERS  +=     object_storage.h
 HEADERS  +=     matrix.h
@@ -42,4 +52,9 @@ HEADERS  +=     expr_except.h
 
 FORMS    += mainwindow.ui \
     matrixeditingdialog.ui \
-    matrixsavingdialog.ui
+    matrixsavingdialog.ui \
+    systemmodelingdialog.ui
+
+contains(QWT_CONFIG, QwtDll) {
+    DEFINES    += QT_DLL QWT_DLL
+}

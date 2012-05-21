@@ -511,6 +511,14 @@ matrix_object& operator /(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj)
+{
+    interval_matrix_object *res =
+            new interval_matrix_object(num_obj->getRows(), num_obj->getColumns());
+    res->getMatrix().assign(num_obj->getMatrix());
+    return res;
+}
+
 
 
 //*************************************************************************************

@@ -1,6 +1,7 @@
 #include <cmath>
 #include "function_objects.h"
 #include "numeric_methods.h"
+#include "interval_ext.h"
 
 //using namespace std;
 
@@ -45,6 +46,12 @@ void load_function_objects(object_storage *stor)
     func = new func_sqrt();
     stor->addObject("sqrt", func);
 
+    func = new func_width();
+    stor->addObject("width", func);
+
+    func = new func_median();
+    stor->addObject("median", func);
+
     func = new func_transp();
     stor->addObject("transp", func);
 
@@ -62,6 +69,15 @@ void load_function_objects(object_storage *stor)
 
     func = new func_is_stable();
     stor->addObject("isStable", func);
+
+    func = new func_inv();
+    stor->addObject("inv", func);
+
+    func = new func_controllability_matrix();
+    stor->addObject("controllabilityMatrix", func);
+
+    func = new func_design_control();
+    stor->addObject("designControl", func);
 
 }
 
@@ -410,6 +426,73 @@ stored_object* func_sqrt::operator ()(vector<stored_object*> &args)
     return res;
 }
 
+stored_object* func_width::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *res = 0;
+    interval_matrix_object *interval_arg = 0;
+    if (numeric_matrix_object *num_obj =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        interval_arg = convertNumericToInterval(num_obj);
+    }
+    else if (interval_matrix_object *interval_obj =
+            dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_arg = interval_obj;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    res = new numeric_matrix_object(interval_arg->getRows(), interval_arg->getColumns());
+    for (size_t i = 0; i != interval_arg->getRows(); ++i)
+        for(size_t j = 0; j != interval_arg->getColumns(); ++j)
+            res->getMatrix()(i, j) =
+                    boost::numeric::width(interval_arg->getMatrix()(i, j));
+
+    return res;
+}
+
+stored_object* func_median::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *res = 0;
+    interval_matrix_object *interval_arg = 0;
+    if (numeric_matrix_object *num_obj =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        interval_arg = convertNumericToInterval(num_obj);
+    }
+    else if (interval_matrix_object *interval_obj =
+            dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_arg = interval_obj;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    res = new numeric_matrix_object(interval_arg->getRows(), interval_arg->getColumns());
+    for (size_t i = 0; i != interval_arg->getRows(); ++i)
+        for(size_t j = 0; j != interval_arg->getColumns(); ++j)
+            res->getMatrix()(i, j) =
+                    boost::numeric::median(interval_arg->getMatrix()(i, j));
+
+    return res;
+}
+
+
 stored_object* func_transp::operator ()(vector<stored_object*> &args)
 {
     if(args.size() != 1)
@@ -443,6 +526,9 @@ stored_object* func_transp::operator ()(vector<stored_object*> &args)
 
 stored_object* func_det::operator ()(vector<stored_object*> &args)
 {
+    using int_calc::operator<;
+    using int_calc::operator>;
+
     if(args.size() != 1)
     {
         throw runtime_error("Wrong arguments count");
@@ -739,6 +825,147 @@ stored_object* func_is_stable::operator ()(vector<stored_object*> &args)
     {
         throw wrong_type("Wrong argument type");
     }
+    return res;
+}
+
+stored_object* func_inv::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    matrix_object *res = 0;
+    if(numeric_matrix_object *num_arg =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        numeric_matrix_object *num_res =
+                new numeric_matrix_object(num_arg->getRows(), num_arg->getColumns());
+        num_methods::inverseMatrix(num_arg->getMatrix(), num_res->getMatrix());
+        res = num_res;
+    }
+    else if(dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        throw runtime_error("Not yet supported");
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+    return res;
+}
+
+stored_object* func_controllability_matrix::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    matrix_object *res = 0;
+    if (numeric_matrix_object *num_A =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        if(numeric_matrix_object *num_B =
+                dynamic_cast<numeric_matrix_object*>(args[1]))
+        {
+            numeric_matrix_object *num_res =
+                    new numeric_matrix_object(num_A->getRows(),
+                                              num_A->getRows() * num_B->getColumns());
+            formControllabilityMatrix(num_A->getMatrix(), num_B->getMatrix(), num_res->getMatrix());
+            res = num_res;
+        }
+        else if (interval_matrix_object *interval_B =
+                 dynamic_cast<interval_matrix_object*>(args[1]))
+        {
+            interval_matrix_object *interval_A = convertNumericToInterval(num_A);
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(interval_A->getRows(),
+                                              interval_A->getRows() * interval_B->getColumns());
+            formControllabilityMatrix(interval_A->getMatrix(),
+                                      interval_B->getMatrix(), interval_res->getMatrix());
+            res = interval_res;
+        }
+        else
+        {
+            throw wrong_type("Wrong argument type");
+        }
+    }
+    else if(interval_matrix_object *interval_A =
+            dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_matrix_object *interval_B = 0;
+
+        if(numeric_matrix_object *num_B =
+                dynamic_cast<numeric_matrix_object*>(args[1]))
+        {
+            interval_B = convertNumericToInterval(num_B);
+        }
+        else if (!(interval_B = dynamic_cast<interval_matrix_object*>(args[1])))
+        {
+            throw wrong_type("Wrong argument type");
+        }
+        interval_matrix_object *interval_res =
+                new interval_matrix_object(interval_A->getRows(),
+                                          interval_A->getRows() * interval_B->getColumns());
+        formControllabilityMatrix(interval_A->getMatrix(),
+                                  interval_B->getMatrix(), interval_res->getMatrix());
+        res = interval_res;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+    return res;
+}
+
+stored_object* func_design_control::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 3)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    interval_matrix_object *interval_A = 0;
+    interval_matrix_object *interval_b = 0;
+    interval_matrix_object *interval_D = 0;
+
+    if(numeric_matrix_object *num_A =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        interval_A = convertNumericToInterval(num_A);
+    }
+    else
+    {
+        interval_A = dynamic_cast<interval_matrix_object*>(args[0]);
+    }
+
+    if(numeric_matrix_object *num_b =
+            dynamic_cast<numeric_matrix_object*>(args[1]))
+    {
+        interval_b = convertNumericToInterval(num_b);
+    }
+    else
+    {
+        interval_b = dynamic_cast<interval_matrix_object*>(args[1]);
+    }
+
+    if(numeric_matrix_object *num_D =
+            dynamic_cast<numeric_matrix_object*>(args[2]))
+    {
+        interval_D = convertNumericToInterval(num_D);
+    }
+    else
+    {
+        interval_D = dynamic_cast<interval_matrix_object*>(args[2]);
+    }
+
+    numeric_matrix_object *res =
+            new numeric_matrix_object(1, interval_A->getRows());
+
+    res->getMatrix() = num_methods::designFeedbackControl(interval_A->getMatrix(),
+                                       interval_b->getMatrix(), interval_D->getMatrix());
+
     return res;
 }
 

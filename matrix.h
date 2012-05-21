@@ -56,6 +56,7 @@ public:
 
     template <typename T1, typename T2>
     static void multiply(matrix&, matrix<T1>&, matrix<T2>&);
+    static matrix<T>& eyeMatrix(size_t n);
 
 
 private:
@@ -73,6 +74,7 @@ private:
     static bool* columns_flags;
 };
 
+template <typename T> void formControllabilityMatrix(matrix<T> &A, matrix<T> &B, matrix<T> &res);
 template <typename T> std::ostream& operator <<(std::ostream &os, const matrix<T> &M);
 
 }

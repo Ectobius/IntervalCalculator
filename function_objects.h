@@ -66,6 +66,16 @@ class func_sqrt : public function_object
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };
 
+class func_width : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_median : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
 class func_transp : public function_object
 {
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
@@ -96,6 +106,20 @@ class func_is_stable : public function_object
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };
 
+class func_inv : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_controllability_matrix : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_design_control : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
 
 }
 

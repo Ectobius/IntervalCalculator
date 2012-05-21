@@ -135,6 +135,8 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator *(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator /(matrix_object &lhs, matrix_object &rhs);
 
+interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj);
+
 template <typename T> void applyToElements(matrix<T>& matr, T(*func)(T))
 {
     for(size_t i = 0; i != matr.getRows(); ++i)

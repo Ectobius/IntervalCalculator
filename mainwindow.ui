@@ -166,7 +166,14 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuSpecialFunctions">
+    <property name="title">
+     <string>Специальное</string>
+    </property>
+    <addaction name="actionModeling"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSpecialFunctions"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -190,6 +197,11 @@
   <action name="actionLoadVariables">
    <property name="text">
     <string>Загрузить переменные...</string>
+   </property>
+  </action>
+  <action name="actionModeling">
+   <property name="text">
+    <string>Моделирование</string>
    </property>
   </action>
  </widget>
