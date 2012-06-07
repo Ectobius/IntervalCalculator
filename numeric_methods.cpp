@@ -7,6 +7,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <ctime>
+
 #include "numeric_methods.h"
 
 using namespace boost::numeric;
@@ -795,6 +797,40 @@ void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
         xk += Axk;
         ++k;
     }
+}
+
+void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
+                  double t0, double t1, vector< matrix<double> > &res)
+{
+    int n = x0.getRows();
+    matrix<double> xk = x0,
+            Axk(n, 1);
+
+    int k = 0;
+    double tk = 0;
+
+    while (tk <= t1)
+    {
+        res.push_back(xk);
+        tk = t0 + k * h;
+        matrix<double>::multiply(Axk, A, xk);
+        Axk *= h;
+        xk += Axk;
+        ++k;
+    }
+}
+
+matrix<double>* randMatrix(size_t n, size_t m)
+{
+    matrix<double> *matr = new matrix<double>(n, m);
+
+    srand((unsigned)(RAND_MAX * ((time(0) % 100) / 100.0)));
+    for (size_t i = 0; i != n; ++i)
+        for (size_t j = 0; j != m; ++j)
+        {
+            (*matr)(i, j) = (double)rand() / (double)RAND_MAX;
+        }
+    return matr;
 }
 
 }

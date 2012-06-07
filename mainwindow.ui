@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Интервальный калькулятор</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -154,7 +154,7 @@
      <x>0</x>
      <y>0</y>
      <width>625</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -168,12 +168,21 @@
    </widget>
    <widget class="QMenu" name="menuSpecialFunctions">
     <property name="title">
-     <string>Специальное</string>
+     <string>Инструменты</string>
     </property>
+    <addaction name="actionClearConsole"/>
+    <addaction name="actionDeleteVariables"/>
     <addaction name="actionModeling"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="actionAboutQt"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSpecialFunctions"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -201,7 +210,22 @@
   </action>
   <action name="actionModeling">
    <property name="text">
-    <string>Моделирование</string>
+    <string>Моделирование...</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>О Qt...</string>
+   </property>
+  </action>
+  <action name="actionClearConsole">
+   <property name="text">
+    <string>Очистить консоль</string>
+   </property>
+  </action>
+  <action name="actionDeleteVariables">
+   <property name="text">
+    <string>Удалить все переменные</string>
    </property>
   </action>
  </widget>

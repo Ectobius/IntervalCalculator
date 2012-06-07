@@ -1,9 +1,7 @@
 #include "systemmodelingdialog.h"
 #include "ui_systemmodelingdialog.h"
 #include <QtGui>
-#include "qwt_plot_curve.h"
 #include "qwt_series_data.h"
-#include <vector>
 
 #include "numeric_methods.h"
 
@@ -12,12 +10,16 @@ using namespace int_calc;
 SystemModelingDialog::SystemModelingDialog(int_calc::object_storage *stor, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SystemModelingDialog),
-    storage(stor)
+    storage(stor),
+    curve(0),
+    numberRegExp("-?\\d+(\\.\\d+)?([eE][+-]\\d+)?")
 {
     ui->setupUi(this);
 
     initStateLayout = new QVBoxLayout;
+    initStateLayout->addStretch();
     ui->initStateGroupBox->setLayout(initStateLayout);
+
 
     qwtPlot = new QwtPlot();
     QHBoxLayout *mainLayout = new QHBoxLayout();
@@ -25,11 +27,19 @@ SystemModelingDialog::SystemModelingDialog(int_calc::object_storage *stor, QWidg
     ui->graphWidget->setLayout(mainLayout);
     qwtPlot->show();
 
+    numberValidator = new QRegExpValidator(numberRegExp, this);
+
+    ui->stepLineEdit->setValidator(numberValidator);
+    ui->t0LineEdit->setValidator(numberValidator);
+    ui->t1LineEdit->setValidator(numberValidator);
+
     //Соединение слотов с сигналами
     connect(ui->matrixComboBox, SIGNAL(currentIndexChanged(QString)),
             this, SLOT(selectedMatrixChanged(QString)));
     connect(ui->startPushButton, SIGNAL(clicked()),
-            this, SLOT(drawGraph()));
+            this, SLOT(calculateFunction()));
+    connect(ui->drawPushButton, SIGNAL(clicked()),
+            this, SLOT(drawPushButton_clicked()));
 
     //
     QList<int> splitSisez;
@@ -52,8 +62,8 @@ void SystemModelingDialog::updateMatrixComboBox()
     ui->matrixComboBox->addItem("");
     for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
     {
-        if (matrix_object *matr_obj =
-                dynamic_cast<matrix_object*>(obj.getObject()))
+        if (numeric_matrix_object *matr_obj =
+                dynamic_cast<numeric_matrix_object*>(obj.getObject()))
         {
             if (matr_obj->getRows() == matr_obj->getColumns())
             {
@@ -65,17 +75,30 @@ void SystemModelingDialog::updateMatrixComboBox()
 
 void SystemModelingDialog::changeMatrix(std::string name)
 {
+    ui->rightWidget->setEnabled(false);
+
     if (name.empty())
     {
-        QMessageBox::warning(this, "", "Yes");
         for (int i = 0; i != initStateLineEdits.size(); ++i)
         {
             initStateLayout->removeWidget(initStateLineEdits[i]);
             delete initStateLineEdits[i];
         }
         initStateLineEdits.clear();
+
+        for (int i = 0; i != initStateLabels.size(); ++i)
+        {
+            initStateLayout->removeWidget(initStateLabels[i]);
+            delete initStateLabels[i];
+        }
+        initStateLabels.clear();
+
+        ui->startPushButton->setEnabled(false);
+
         return;
     }
+
+    ui->startPushButton->setEnabled(true);
 
     stored_object *obj = storage->getObjectByName(name);
     if (!obj)
@@ -89,13 +112,20 @@ void SystemModelingDialog::changeMatrix(std::string name)
     int n = matr_obj->getRows();
     int oldSize = initStateLineEdits.size();
     QLineEdit *lineEdit = 0;
+    QLabel *label = 0;
     if (n > oldSize)
     {
         for (int i = 0; i < n - oldSize; ++i)
         {
+            label = new QLabel(QString("x") + QString::number(oldSize + i + 1));
+            initStateLayout->insertWidget(initStateLayout->count() - 1, label);
+            initStateLabels.push_back(label);
+            label->show();
+
             lineEdit = new QLineEdit;
-            initStateLayout->addWidget(lineEdit);
+            initStateLayout->insertWidget(initStateLayout->count() - 1, lineEdit);
             initStateLineEdits.push_back(lineEdit);
+            lineEdit->setValidator(numberValidator);
             lineEdit->show();
         }
     }
@@ -103,8 +133,20 @@ void SystemModelingDialog::changeMatrix(std::string name)
     {
         for (int i = 0; i < oldSize - n; ++i)
         {
+            lineEdit = initStateLineEdits[initStateLineEdits.size() - 1];
             initStateLineEdits.remove(initStateLineEdits.size() - 1);
+            delete lineEdit;
+
+            label = initStateLabels[initStateLabels.size() - 1];
+            initStateLabels.remove(initStateLabels.size() - 1);
+            delete label;
         }
+    }
+
+    ui->coordComboBox->clear();
+    for (int i = 0; i < n; ++i)
+    {
+        ui->coordComboBox->addItem(QString::number(i + 1));
     }
 }
 
@@ -113,7 +155,43 @@ void SystemModelingDialog::selectedMatrixChanged(QString name)
     changeMatrix(name.toStdString());
 }
 
-void SystemModelingDialog::drawGraph()
+void SystemModelingDialog::drawPushButton_clicked()
+{
+   int coord = ui->coordComboBox->currentIndex();
+   drawGraph(coord);
+}
+
+bool SystemModelingDialog::checkInput()
+{
+    if(!ui->stepLineEdit->hasAcceptableInput())
+    {
+        ui->stepLineEdit->setFocus();
+        return false;
+    }
+    if(!ui->t0LineEdit->hasAcceptableInput())
+    {
+        ui->t0LineEdit->setFocus();
+        return false;
+    }
+    if(!ui->t1LineEdit->hasAcceptableInput())
+    {
+        ui->t1LineEdit->setFocus();
+        return false;
+    }
+
+    for (int i = 0; i != initStateLineEdits.size(); ++i)
+    {
+        if(!initStateLineEdits[i]->hasAcceptableInput())
+        {
+            initStateLineEdits[i]->setFocus();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void SystemModelingDialog::calculateFunction()
 {
     std::string name = ui->matrixComboBox->currentText().toStdString();
     if (name.empty())
@@ -121,46 +199,58 @@ void SystemModelingDialog::drawGraph()
         return;
     }
 
-    stored_object *obj = storage->getObjectByName(name);
-    interval_matrix_object *interval_obj = 0;
-    if (dynamic_cast<interval_matrix_object*>(obj))
+    if (!checkInput())
     {
-        interval_obj = dynamic_cast<interval_matrix_object*>(obj);
-    }
-    else if(numeric_matrix_object *num_obj =
-            dynamic_cast<numeric_matrix_object*>(obj))
-    {
-        interval_obj = convertNumericToInterval(num_obj);
+        QMessageBox::warning(this, "", trUtf8("Нужно ввести число"));
+        return;
     }
 
-    int n = interval_obj->getRows();
-    matrix<d_interval> x0(n, 1);
+    stored_object *obj = storage->getObjectByName(name);
+    numeric_matrix_object *num_obj =
+            dynamic_cast<numeric_matrix_object*>(obj);
+
+    int n = num_obj->getRows();
+    matrix<double> x0(n, 1);
     for (int i = 0; i != initStateLineEdits.size(); ++i)
     {
         x0(i, 0) = initStateLineEdits[i]->text().toDouble();
     }
 
-    double h = ui->stepLineEdit->text().toDouble();
-    double t0 = ui->t0LineEdit->text().toDouble();
-    double t1 = ui->t1LineEdit->text().toDouble();
+    h = ui->stepLineEdit->text().toDouble();
+    t0 = ui->t0LineEdit->text().toDouble();
+    t1 = ui->t1LineEdit->text().toDouble();
 
-    vector< matrix<d_interval> > func;
-    num_methods::intervalEuler(interval_obj->getMatrix(), x0, h, t0, t1, func);
+    if (t0 > t1)
+    {
+        QMessageBox::warning(this, "", trUtf8("t0 должно быть меньше t1"));
+        ui->t0LineEdit->setFocus();
+        return;
+    }
 
+    func.clear();
+    num_methods::numericEuler(num_obj->getMatrix(), x0, h, t0, t1, func);
+
+    drawGraph(0);
+    ui->rightWidget->setEnabled(true);
+    ui->coordComboBox->setCurrentIndex(0);
+}
+
+void SystemModelingDialog::drawGraph(int coord)
+{
     QVector<double> dataX, dataY;
     for (int i = 0; i < func.size(); ++i)
     {
         dataX.push_back(t0 + i * h);
-        dataY.push_back(func[i](0, 0).upper());
+        dataY.push_back(func[i](coord, 0));
     }
 
     QwtPointArrayData *data = new QwtPointArrayData(dataX, dataY);
 
-    QwtPlotCurve *curve = new QwtPlotCurve();
+    delete curve;
+    curve = new QwtPlotCurve();
     curve->setData(data);
 
     curve->attach(qwtPlot);
-    curve->show();
 
     qwtPlot->replot();
 }

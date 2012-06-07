@@ -43,6 +43,10 @@ private slots:
     void saveVariables();
     void loadVariables();
     void modelSystem();
+    void clearConsole();
+    void deleteVariables();
+
+    void aboutQt();
 
 protected:
     void keyPressEvent(QKeyEvent *keyEvent);

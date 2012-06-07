@@ -90,6 +90,14 @@ template <typename T> matrix<T>::~matrix()
     destroy();
 }
 
+template <typename T> void matrix<T>::resize(size_t newRows, size_t newColumns)
+{
+    destroy();
+    matr_ptr = allocate_elems(newRows, newColumns);
+    rows = newRows;
+    columns = newColumns;
+}
+
 /*Метод для заполнения матрицы заданным значением*/
 template <typename T> void matrix<T>::fill(const T &orig)
 {
@@ -135,9 +143,9 @@ template <typename T> template <typename TR> void matrix<T>::copyArea(size_t des
 /*Метод, возвращающий ссылку на элемент матрицы*/
 template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
 {
-    if(r > rows || c > columns)
+    if(r >= rows || c >= columns)
     {
-        throw out_of_range("Index is out of range");
+        throw runtime_error("Index is out of range");
     }
     return matr_ptr[r][c];
 }
@@ -145,9 +153,9 @@ template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
 /*Константный метод, возвращающий константную ссылку на элемент матрицы*/
 template <typename T> const T& matrix<T>::operator()(size_t r, size_t c) const
 {
-    if(r > rows || c > columns)
+    if(r >= rows || c >= columns)
     {
-        throw out_of_range("Index is out of range");
+        throw runtime_error("Index is out of range");
     }
     return matr_ptr[r][c];
 }
@@ -257,6 +265,22 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(co
     }
 
     return *this;
+}
+
+template <typename T> template <typename TR> void matrix<T>::elementwiseMult(const matrix<TR> &rhs)
+{
+    if(rows != rhs.rows || columns != rhs.columns)
+    {
+        throw size_mismatch("Sizes of matrices do not match");
+    }
+
+    for(size_t i = 0; i != rows; ++i)
+    {
+        for(size_t j = 0; j != columns; ++j)
+        {
+            matr_ptr[i][j] *= rhs.matr_ptr[i][j];
+        }
+    }
 }
 
 template <typename T> matrix<T>& matrix<T>::transp()
@@ -443,9 +467,7 @@ void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
     {
         if(res.getRows() != matr1.getRows() || res.getColumns() != matr2.getColumns())
         {
-            matrix<T> *matr = new matrix<T>(matr1.getRows(), matr2.getColumns());
-            res.assign(*matr);
-            delete matr;
+            res.resize(matr1.getRows(), matr2.getColumns());
         }
 
         T sum(0);
@@ -462,6 +484,33 @@ void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
             }
         }
     }
+}
+
+template <typename T> template <typename T1, typename T2>
+void matrix<T>::kronekerProduct(matrix<T> &res, matrix<T1> &lhs, matrix<T2> &rhs)
+{
+    if (res.getRows() != lhs.getRows() * rhs.getRows() ||
+            res.getColumns() != lhs.getColumns() * rhs.getColumns())
+    {
+        res.resize(lhs.getRows() * rhs.getRows(),
+                   lhs.getColumns() * rhs.getColumns());
+    }
+
+    matrix<T2> copyRhs(rhs);
+
+    for (int i = 0; i != lhs.getRows(); ++i)
+    {
+        for (int j = 0; j != lhs.getColumns(); ++j)
+        {
+            copyRhs *= lhs(i, j);
+            res.copyArea(i * rhs.getRows(), j * rhs.getColumns(),
+                         rhs.getRows(), rhs.getColumns(),
+                         copyRhs, 0, 0);
+            copyRhs = rhs;
+        }
+    }
+
+    return;
 }
 
 template <typename T> matrix<T>& matrix<T>::eyeMatrix(size_t n)

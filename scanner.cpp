@@ -1,4 +1,4 @@
-﻿#include "scanner.h"
+#include "scanner.h"
 #include <cctype>
 
 using namespace std;
@@ -27,6 +27,7 @@ scanner::lexem_type scanner::scanNext(std::string &lex)
     lex = string();
     scanner_state cur_state = initial;
     lexem_type result = scanner::error_type;
+    bool isCmd = false;
 
     while(cur_state != final)
     {
@@ -53,6 +54,12 @@ scanner::lexem_type scanner::scanNext(std::string &lex)
             else if(isspace(text[pos]))
             {
                 cur_state = skipping_spaces;
+            }
+            else if (text[pos] == '#')
+            {
+                lex.push_back(text[pos]);
+                cur_state = scan_identifier;
+                isCmd = true;
             }
             else
             {
@@ -118,7 +125,10 @@ scanner::lexem_type scanner::scanNext(std::string &lex)
                     (!isalpha(text[pos]) && !isdigit(text[pos])))
             {
                 cur_state = final;
-                result = identifier;
+                if (isCmd)
+                    result = command;
+                else
+                    result = identifier;
                 doInc = false;
             }
             else

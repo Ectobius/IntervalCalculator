@@ -1,4 +1,4 @@
-﻿#ifndef SCANNER_H
+#ifndef SCANNER_H
 #define SCANNER_H
 
 #include <string>
@@ -28,6 +28,7 @@ public:
         opening_brace,
         closing_brace,
         comma,
+        command,
         end_expression,
         error_type
     };

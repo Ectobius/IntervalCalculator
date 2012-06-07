@@ -2,13 +2,17 @@
 #define SYSTEMMODELINGDIALOG_H
 
 #include <QDialog>
-#include <QLineEdit>
 #include "qwt_plot.h"
 #include "object_storage.h"
 #include <string>
 #include <QVector>
+#include <vector>
+#include "qwt_plot_curve.h"
 
 class QVBoxLayout;
+class QRegExpValidator;
+class QLineEdit;
+class QLabel;
 
 namespace Ui {
     class SystemModelingDialog;
@@ -27,15 +31,28 @@ private:
     int_calc::object_storage *storage;
     QwtPlot *qwtPlot;
     QVector<QLineEdit*> initStateLineEdits;
+    QVector<QLabel*> initStateLabels;
     QVBoxLayout *initStateLayout;
+    QwtPlotCurve *curve;
+    std::vector< int_calc::matrix<double> > func;
+    QRegExp numberRegExp;
+    QRegExpValidator *numberValidator;
+
+    double t0;
+    double t1;
+    double h;
 
     void changeMatrix(std::string name);
 
 public slots:
     void updateMatrixComboBox();
     void selectedMatrixChanged(QString name);
+    void drawPushButton_clicked();
 
-    void drawGraph();
+    void calculateFunction();
+    bool checkInput();
+
+    void drawGraph(int coord);
 };
 
 #endif // SYSTEMMODELINGDIALOG_H

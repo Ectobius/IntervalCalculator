@@ -26,12 +26,9 @@ SOURCES +=    function_objects.cpp
 SOURCES +=    expression_interpreter.cpp
 
 INCLUDEPATH += C:\Programming\boost_1_49_0
-INCLUDEPATH += C:\Programming\qwt-6.0.0\src
+INCLUDEPATH += C:\Qwt-6.0.0\include
 
-LIBS += C:\Programming\qwt-6.0.0\lib\qwt.dll
-#LIBS += C:\Programming\qwt-6.0.0\lib\qwtd.dll
-#LIBS += C:\Programming\qwt-6.0.0\lib\qwtmathml.dll
-#LIBS += C:\Programming\qwt-6.0.0\lib\qwtmathmld.dll
+LIBS += C:\Qwt-6.0.0\lib\qwt.dll
 
 CONFIG += qwt
 

@@ -76,6 +76,16 @@ class func_median : public function_object
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };
 
+class func_left : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_right : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
 class func_transp : public function_object
 {
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
@@ -117,6 +127,31 @@ class func_controllability_matrix : public function_object
 };
 
 class func_design_control : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_rand : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_eye : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_ones : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_elementwise_product : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class func_kroneker_product : public function_object
 {
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };

@@ -31,6 +31,8 @@ public:
     const size_t getRows() const { return rows; }
     const size_t getColumns() const { return columns; }
 
+    void resize(size_t newRows, size_t newColumns);
+
     void fill(const T&);
     template <typename TR> void copyArea(size_t dest_row, size_t dest_col,
                                          size_t row_count, size_t col_count, matrix<TR> &src,
@@ -48,6 +50,7 @@ public:
     template <typename TR> matrix& operator*=(const TR&);
     template <typename TR> matrix& operator/=(const TR&);
 
+    template <typename TR> void elementwiseMult(const matrix<TR> &rhs);
     matrix& transp();
     T det();
     T trace();
@@ -55,7 +58,11 @@ public:
 
 
     template <typename T1, typename T2>
-    static void multiply(matrix&, matrix<T1>&, matrix<T2>&);
+    static void multiply(matrix &res, matrix<T1> &lhs, matrix<T2> &rhs);
+
+    template <typename T1, typename T2>
+    static void kronekerProduct(matrix &res, matrix<T1> &lhs, matrix<T2> &rhs);
+
     static matrix<T>& eyeMatrix(size_t n);
 
 

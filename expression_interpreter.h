@@ -1,4 +1,4 @@
-﻿#ifndef EXPRESSION_INTERPRETER_H
+#ifndef EXPRESSION_INTERPRETER_H
 #define EXPRESSION_INTERPRETER_H
 
 #include "scanner.h"
@@ -244,21 +244,65 @@ private:
     stored_object *constant;
 };
 
+class appeal_elements : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
+class expression_result
+{
+public:
+    virtual ~expression_result() { }
+};
+
+class assign_result : public expression_result
+{
+public:
+    assign_result(const std::string &var_name) :
+        variable_name(var_name)
+    {
+
+    }
+
+    std::string getVarName() { return variable_name; }
+
+
+private:
+    std::string variable_name;
+};
+
+class command_result : public expression_result
+{
+public:
+    command_result(const std::string &comm_name) :
+        command_name(comm_name)
+    {
+
+    }
+
+    std::string getCommandName() { return command_name; }
+
+
+private:
+    std::string command_name;
+};
 
 class expression_interpreter
 {
 public:
     expression_interpreter(object_storage *);
 
-    string execute(std::string &cmd);
+    expression_result* execute(std::string &cmd);
 
 
 private:
     int_calc::scanner scan;
     object_storage *storage;
-    bool result;
+    appeal_elements app_elem;
+    expression_result* result;
 
-    std::string S();
+    expression_result* S();
+    expression_result* C();
     expression_node* E();
     expression_node* U(expression_node *left_node, scanner::lexem_type op);
     expression_node* A(expression_node *left_node, scanner::lexem_type op);

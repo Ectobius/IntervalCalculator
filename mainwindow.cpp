@@ -48,6 +48,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionModeling, SIGNAL(triggered()),
             this, SLOT(modelSystem()));
+    connect(ui->actionClearConsole, SIGNAL(triggered()),
+            this, SLOT(clearConsole()));
+    connect(ui->actionDeleteVariables, SIGNAL(triggered()),
+            this, SLOT(deleteVariables()));
+
+    connect(ui->actionAboutQt, SIGNAL(triggered()),
+            this, SLOT(aboutQt()));
 
     //
     QList<int> splitSisez;
@@ -68,44 +75,69 @@ MainWindow::~MainWindow()
 void MainWindow::executeCommand()
 {
     commands << ui->commandLineEdit->text();
-    if(commands[currentCommandIndex] != ui->commandLineEdit->text())
+    if (commands[currentCommandIndex] != ui->commandLineEdit->text())
     {
         currentCommandIndex = commands.size() - 1;
     }
 
     std::string command = ui->commandLineEdit->text().toStdString();
 
-    if(command.empty())
+    if (command.empty())
     {
         return;
     }
 
+    expression_result *exp_res = 0;
     std::string varName;
     ostringstream sStream;
     try
     {
-        varName = interpreter->execute(command);
+        exp_res = interpreter->execute(command);
 
-        sStream << varName << " = " << std::endl;
-
-        stored_object *obj = storage->getObjectByName(varName);
-        if(dynamic_cast<numeric_matrix_object*>(obj))
+        if (assign_result *assign_res =
+                dynamic_cast<assign_result*>(exp_res))
         {
-            numeric_matrix_object *num_obj =
-                    dynamic_cast<numeric_matrix_object*>(obj);
+            varName = assign_res->getVarName();
 
-            sStream << num_obj->getMatrix();
+            sStream << varName << " = " << std::endl;
+
+            stored_object *obj = storage->getObjectByName(varName);
+            if (dynamic_cast<numeric_matrix_object*>(obj))
+            {
+                numeric_matrix_object *num_obj =
+                        dynamic_cast<numeric_matrix_object*>(obj);
+
+                sStream << num_obj->getMatrix();
+            }
+            else if (dynamic_cast<interval_matrix_object*>(obj))
+            {
+                interval_matrix_object *interval_obj =
+                        dynamic_cast<interval_matrix_object*>(obj);
+
+                sStream << interval_obj->getMatrix();
+            }
+            else
+            {
+
+            }
         }
-        else if(dynamic_cast<interval_matrix_object*>(obj))
+        else if (command_result *command_res =
+                 dynamic_cast<command_result*>(exp_res))
         {
-            interval_matrix_object *interval_obj =
-                    dynamic_cast<interval_matrix_object*>(obj);
-
-            sStream << interval_obj->getMatrix();
-        }
-        else
-        {
-
+            if (command_res->getCommandName() == "#func")
+            {
+                for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
+                {
+                    if (dynamic_cast<function_object*>(obj.getObject()))
+                    {
+                        sStream << obj.getName() << endl;
+                    }
+                }
+            }
+            else
+            {
+                sStream << "Unknown command" << endl;
+            }
         }
     }
     catch(std::runtime_error err)
@@ -126,17 +158,17 @@ void MainWindow::executeCommand()
 
 void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
 {
-    if(ui->commandLineEdit->hasFocus() && !commands.isEmpty())
+    if (ui->commandLineEdit->hasFocus() && !commands.isEmpty())
     {
-        if(keyEvent->key() == Qt::Key_Up)
+        if (keyEvent->key() == Qt::Key_Up)
         {
             ui->commandLineEdit->setText(commands[currentCommandIndex]);
-            if(currentCommandIndex > 0)
+            if (currentCommandIndex > 0)
                 --currentCommandIndex;
         }
-        else if(keyEvent->key() == Qt::Key_Down)
+        else if (keyEvent->key() == Qt::Key_Down)
         {
-            if(currentCommandIndex < commands.size() - 1)
+            if (currentCommandIndex < commands.size() - 1)
                 ++currentCommandIndex;
             ui->commandLineEdit->setText(commands[currentCommandIndex]);
         }
@@ -146,9 +178,9 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
 void MainWindow::updateVariableList()
 {
     ui->listWidget->clear();
-    for(named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
+    for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
     {
-        if(dynamic_cast<matrix_object*>(obj.getObject()))
+        if (dynamic_cast<matrix_object*>(obj.getObject()))
         {
             ui->listWidget->addItem(QString(obj.getName().c_str()));
         }
@@ -161,7 +193,7 @@ void MainWindow::editMatrix(QListWidgetItem *item)
     std::string name = item->text().toStdString();
     matrixEditingDialog->setMatrixName(QString(name.c_str()));
     stored_object *obj = storage->getObjectByName(name);
-    if(dynamic_cast<matrix_object*>(obj))
+    if (dynamic_cast<matrix_object*>(obj))
     {
         matrix_object *matrObj =
                 dynamic_cast<matrix_object*>(obj);
@@ -173,7 +205,7 @@ void MainWindow::editMatrix(QListWidgetItem *item)
 void MainWindow::addMatrix()
 {
     std::string name("untitled");
-    if(storage->getObjectByName(name))
+    if (storage->getObjectByName(name))
     {
         int num = 1;
         while(storage->getObjectByName(name +
@@ -192,7 +224,7 @@ void MainWindow::addMatrix()
 
 void MainWindow::deleteMatrix()
 {
-    if(ui->listWidget->selectedItems().isEmpty())
+    if (ui->listWidget->selectedItems().isEmpty())
     {
         QMessageBox::warning(this, "",
                              QString::fromUtf8("Выделите элемент списка"));
@@ -214,13 +246,13 @@ void MainWindow::loadVariables()
     QString fileName =
             QFileDialog::getOpenFileName(this, QString::fromUtf8("Открыть"),
                                          ".", QString::fromUtf8("Текстовые файлы (*.txt);;Все файлы (*.*)"));
-    if(fileName.isEmpty())
+    if (fileName.isEmpty())
     {
        return;
     }
 
     QFile file(fileName);
-    if(!file.open(QIODevice::ReadOnly))
+    if (!file.open(QIODevice::ReadOnly))
     {
         QMessageBox::warning(this, "",
                              QString::fromUtf8("Ошибка при открытии файла"));
@@ -235,17 +267,17 @@ void MainWindow::loadVariables()
         loadVariablesToList(objList, inStream);
         file.close();
     }
-    catch(runtime_error err)
+    catch (runtime_error err)
     {
         QMessageBox::warning(this, "",
                              QString::fromUtf8("Ошибка при чтении файла"));
         return;
     }
 
-    for(int i = 0; i != objList.size(); ++i)
+    for (int i = 0; i != objList.size(); ++i)
     {
         stored_object *obj = storage->getObjectByName(objList[i].getName());
-        if(dynamic_cast<function_object*>(obj))
+        if (dynamic_cast<function_object*>(obj))
         {
             delete objList[i].getObject();
 
@@ -269,18 +301,18 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
             "\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s*\\]\\s*");
     QRegExp numberRegExp("\\s*-?\\d+(\\.\\d+)?([eE][+-]\\d+)?\\s*");
     bool end = false;
-    while(!end)
+    while (!end)
     {
         do
         {
             inStream >> curStr;
         }
-        while(curStr.isEmpty() && !inStream.atEnd());
-        if(inStream.atEnd())
+        while (curStr.isEmpty() && !inStream.atEnd());
+        if (inStream.atEnd())
             break;
         name = curStr;
         inStream >> rows >> columns;
-        if(rows <= 0 || columns <= 0)
+        if (rows <= 0 || columns <= 0)
         {
             throw runtime_error("File has wrong format");
         }
@@ -289,15 +321,15 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
         inStream.readLine();
         QString elemStr;
         bool isInterval = false;
-        for(int i = 0; i != rows; ++i)
+        for (int i = 0; i != rows; ++i)
         {
             int index = 0;
             curStr = inStream.readLine();
-            for(int j = 0; j != columns; ++j)
+            for (int j = 0; j != columns; ++j)
             {
                 index = elemRegExp.indexIn(curStr, index);
                 elemStr = elemRegExp.cap(0);
-                if(intervalRegExp.exactMatch(elemStr))
+                if (intervalRegExp.exactMatch(elemStr))
                 {
                     isInterval = true;
                     intervalRegExp.indexIn(elemStr);
@@ -305,7 +337,7 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
                     double val2 = intervalRegExp.cap(2).toDouble();
                     intervalObj->getMatrix()(i, j) = d_interval(val1, val2);
                 }
-                else if(numberRegExp.exactMatch(elemStr))
+                else if (numberRegExp.exactMatch(elemStr))
                 {
                     numberRegExp.indexIn(elemStr);
                     double val = numberRegExp.cap(0).toDouble();
@@ -319,7 +351,7 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
             }
         }
 
-        if(isInterval)
+        if (isInterval)
         {
             lst.push_back(named_object(name.toStdString(), intervalObj));
         }
@@ -327,8 +359,8 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
         {
             numeric_matrix_object *numObj =
                     new numeric_matrix_object(intervalObj->getRows(), intervalObj->getColumns());
-            for(int i = 0; i != intervalObj->getRows(); ++i)
-                for(int j = 0; j != intervalObj->getColumns(); ++j)
+            for (int i = 0; i != intervalObj->getRows(); ++i)
+                for (int j = 0; j != intervalObj->getColumns(); ++j)
                     numObj->getMatrix()(i, j) = intervalObj->getMatrix()(i, j).lower();
             delete intervalObj;
             lst.push_back(named_object(name.toStdString(), numObj));
@@ -342,4 +374,32 @@ void MainWindow::modelSystem()
     connect(&dynamic_cast<SignalingStorage*>(storage)->changedSignal, SIGNAL(signal()),
             &modelingDialog, SLOT(updateMatrixComboBox()));
     modelingDialog.exec();
+}
+
+void MainWindow::clearConsole()
+{
+    ui->textEdit->clear();
+}
+
+void MainWindow::deleteVariables()
+{
+    vector<string> deletedVar;
+    for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
+    {
+        if (dynamic_cast<matrix_object*>(obj.getObject()))
+        {
+            deletedVar.push_back(obj.getName());
+        }
+    }
+
+    for (vector<string>::iterator iter = deletedVar.begin();
+         iter != deletedVar.end(); ++iter)
+    {
+        storage->deleteObject(*iter);
+    }
+}
+
+void MainWindow::aboutQt()
+{
+    QMessageBox::aboutQt(this);
 }

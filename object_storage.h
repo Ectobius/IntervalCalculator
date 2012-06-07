@@ -135,6 +135,9 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator *(matrix_object &lhs, matrix_object &rhs);
 matrix_object& operator /(matrix_object &lhs, matrix_object &rhs);
 
+matrix_object& elementwiseProduct(matrix_object &lhs, matrix_object &rhs);
+matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs);
+
 interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj);
 
 template <typename T> void applyToElements(matrix<T>& matr, T(*func)(T))

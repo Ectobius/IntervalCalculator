@@ -1,4 +1,4 @@
-﻿#include "expression_interpreter.h"
+#include "expression_interpreter.h"
 #include "matrix.h"
 #include <cstdlib>
 
@@ -393,39 +393,188 @@ expression_interpreter::expression_interpreter(object_storage *stor) :
 }
 
 
+stored_object* appeal_elements::operator ()(vector<stored_object*> &args)
+{
+    matrix_object *res = 0;
+
+    if (args.size() == 3)
+    {
+        int row = 0, col = 0;
+
+        if (numeric_matrix_object *row_ind =
+                dynamic_cast<numeric_matrix_object*>(args[1]))
+        {
+            row = (int)row_ind->getMatrix()(0, 0);
+            if ((double)row != row_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        if (numeric_matrix_object *col_ind =
+                dynamic_cast<numeric_matrix_object*>(args[2]))
+        {
+            col = (int)col_ind->getMatrix()(0, 0);
+            if ((double)col != col_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        if (numeric_matrix_object *num_arg =
+                dynamic_cast<numeric_matrix_object*>(args[0]))
+        {
+            numeric_matrix_object *num_res =
+                    new numeric_matrix_object(1, 1);
+            num_res->getMatrix()(0, 0) = num_arg->getMatrix()(row - 1, col - 1);
+
+            res = num_res;
+        }
+        else if (interval_matrix_object *interval_arg =
+                 dynamic_cast<interval_matrix_object*>(args[0]))
+        {
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(1, 1);
+            interval_res->getMatrix()(0, 0) = interval_arg->getMatrix()(row - 1, col - 1);
+
+            res = interval_res;
+        }
+    }
+    else if (args.size() == 5)
+    {
+        int row_beg = 0, col_beg = 0,
+                row_end = 0, col_end = 0;
+
+        if (numeric_matrix_object *row_ind =
+                dynamic_cast<numeric_matrix_object*>(args[1]))
+        {
+            row_beg = (int)row_ind->getMatrix()(0, 0);
+            if ((double)row_beg != row_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        if (numeric_matrix_object *row_ind =
+                dynamic_cast<numeric_matrix_object*>(args[2]))
+        {
+            row_end = (int)row_ind->getMatrix()(0, 0);
+            if ((double)row_end != row_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        if (numeric_matrix_object *col_ind =
+                dynamic_cast<numeric_matrix_object*>(args[3]))
+        {
+            col_beg = (int)col_ind->getMatrix()(0, 0);
+            if ((double)col_beg != col_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        if (numeric_matrix_object *col_ind =
+                dynamic_cast<numeric_matrix_object*>(args[4]))
+        {
+            col_end = (int)col_ind->getMatrix()(0, 0);
+            if ((double)col_end != col_ind->getMatrix()(0, 0))
+            {
+                throw runtime_error("Expected integer number");
+            }
+        }
+        else
+        {
+            throw runtime_error("Wrong argument type");
+        }
+
+        int rows = row_end - row_beg + 1,
+                columns = col_end - col_beg + 1;
+
+        if (rows <= 0 || columns <= 0)
+        {
+            throw runtime_error("Incorrect range");
+        }
+
+        if (numeric_matrix_object *num_arg =
+                dynamic_cast<numeric_matrix_object*>(args[0]))
+        {
+            numeric_matrix_object *num_res =
+                    new numeric_matrix_object(rows, columns);
+
+            num_res->getMatrix().copyArea(0, 0, rows, columns,
+                                          num_arg->getMatrix(), row_beg - 1, col_beg - 1);
+
+            res = num_res;
+        }
+        else if (interval_matrix_object *interval_arg =
+                 dynamic_cast<interval_matrix_object*>(args[0]))
+        {
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(rows, columns);
+
+            interval_res->getMatrix().copyArea(0, 0, rows, columns,
+                                          interval_arg->getMatrix(), row_beg - 1, col_beg - 1);
+
+            res = interval_res;
+        }
+    }
+    else
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    return res;
+}
+
+
+
 /********__________________Анализ_____________________**********************
 ****************************************************************************/
 
-string expression_interpreter::execute(std::string &cmd)
+expression_result* expression_interpreter::execute(std::string &cmd)
 {
-    result = true;
-    scan.setText(cmd);
-    string var_name;
+    scan.setText(cmd);    
 
-    try
-    {
-        var_name = S();
-    }
-    catch(parsing_error err)
-    {
+    result = S();
 
-    }
-
-    return var_name;
+    return result;
 }
 
-string expression_interpreter::S()
+expression_result* expression_interpreter::S()
 {
+    expression_result *res = 0;
     string var_name("ans");
     string lex;
     scanner::position_type pos = scan.getPosition();
     scanner::lexem_type type1 = scan.scanNext(lex);
-    if(type1 == scanner::identifier)
+    if (type1 == scanner::identifier)
     {
         string nm = lex;
 
         type1 = scan.scanNext(lex);
-        if(type1 != scanner::assignment)
+        if (type1 != scanner::assignment)
         {
             scan.setPosition(pos);
         }
@@ -433,6 +582,14 @@ string expression_interpreter::S()
         {
             var_name = nm;
         }
+
+        res = new assign_result(var_name);
+    }
+    else if (type1 == scanner::command)
+    {
+        scan.setPosition(pos);
+        res = C();
+        return res;
     }
     else
     {
@@ -442,7 +599,7 @@ string expression_interpreter::S()
     expression_node *root = E();
 
     type1 = scan.scanNext(lex);
-    if(type1 != scanner::end_expression)
+    if (type1 != scanner::end_expression)
     {
         delete root;
         throw parsing_error("Excess symbols");
@@ -457,10 +614,30 @@ string expression_interpreter::S()
         {
             throw wrong_type("Left side of assignment cannot be a function");
         }
+        else if(assigned_obj)
+        {
+            storage->deleteObject(var_name);
+            delete assigned_obj;
+        }
+
         storage->addObject(var_name, res);
     }
 
-    return var_name;
+    return res;
+}
+
+expression_result* expression_interpreter::C()
+{
+    expression_result *res = 0;
+    string lex;
+    scanner::lexem_type type1 = scan.scanNext(lex);
+
+    if (type1 == scanner::command)
+    {
+        res = new command_result(lex);
+    }
+
+    return res;
 }
 
 expression_node* expression_interpreter::E()
@@ -472,27 +649,27 @@ expression_node* expression_interpreter::E()
 
     bool doMinus = false;
 
-    if(type1 != scanner::plus &&
+    if (type1 != scanner::plus &&
             type1 != scanner::minus)
     {
         scan.setPosition(pos);       
     }
 
-    if(type1 == scanner::minus)
+    if (type1 == scanner::minus)
     {
         doMinus = true;
     }
 
     expression_node *left_node = A(0, scanner::error_type);
 
-    if(doMinus)
+    if (doMinus)
     {
         left_node = new unary_minus_node(left_node);
     }
 
     pos = scan.getPosition();
     type1 = scan.scanNext(lex);
-    if(type1 == scanner::plus ||
+    if (type1 == scanner::plus ||
             type1 == scanner::minus)
     {
         result_node = U(left_node, type1);
@@ -578,8 +755,6 @@ expression_node* expression_interpreter::M()
     scanner::position_type pos = scan.getPosition();
     scanner::lexem_type type1 = scan.scanNext(lex);
 
-
-
     switch(type1)
     {
     case scanner::identifier:
@@ -590,30 +765,38 @@ expression_node* expression_interpreter::M()
         type1 = scan.scanNext(lex);
         if(type1 == scanner::opening_bracket)
         {
-            stored_object *fun_obj = storage->getObjectByName(var_name);
+            stored_object *obj = storage->getObjectByName(var_name);
             function_object *fun = 0;
 
-            if(dynamic_cast<function_object*>(fun_obj))
+            vector<expression_node*> vect;
+
+            if (dynamic_cast<function_object*>(obj))
             {
-                fun = dynamic_cast<function_object*>(fun_obj);
+                fun = dynamic_cast<function_object*>(obj);
+            }
+            else if(dynamic_cast<matrix_object*>(obj))
+            {
+                fun = &app_elem;
+                variable_node *var_node =
+                        new variable_node(obj);
+                vect.push_back(var_node);
             }
             else
             {
-                throw runtime_error(var_name + " is not a function");
+                throw runtime_error("Unknown type");
             }
 
             function_call_node *fun_node =
                     new function_call_node(fun);
-            vector<expression_node*> vect;
 
             P(vect);
 
-            fun_node->childs = vect;
+            fun_node->childs.insert(fun_node->childs.end(),
+                                    vect.begin(), vect.end());
 
             type1 = scan.scanNext(lex);
             if(type1 != scanner::closing_bracket)
             {
-                result = false;
                 throw parsing_error("Error");
             }
 
@@ -647,7 +830,6 @@ expression_node* expression_interpreter::M()
         type1 = scan.scanNext(lex);
         if(type1 != scanner::closing_bracket)
         {
-            result = false;
             throw parsing_error("Expected )'");
         }
         break;
@@ -658,14 +840,12 @@ expression_node* expression_interpreter::M()
         type1 = scan.scanNext(lex);
         if(type1 != scanner::semicolon)
         {
-            result = false;
             throw parsing_error("Expected ;");
         }
         expression_node *right_node = E();
         type1 = scan.scanNext(lex);
         if(type1 != scanner::closing_square_bracket)
         {
-            result = false;
             throw parsing_error("Expected ]");
         }
 
@@ -689,7 +869,6 @@ expression_node* expression_interpreter::M()
             type1 = scan.scanNext(lex);
             if(type1 != scanner::closing_brace)
             {
-                result = false;
                 throw parsing_error("Expected }");
             }
         }
@@ -700,7 +879,6 @@ expression_node* expression_interpreter::M()
     }
 
     default:
-        result = false;
         throw parsing_error("Error");
 
     }
@@ -736,10 +914,11 @@ void expression_interpreter::G(vector<expression_node*> &vect)
     string lex;
     scanner::position_type pos = scan.getPosition();
     scanner::lexem_type type1 = scan.scanNext(lex);
-    if(type1 != scanner::semicolon &&
-            type1 != scanner::closing_brace)
+    if(/*type1 != scanner::semicolon &&
+            type1 != scanner::closing_brace*/
+            type1 == scanner::comma)
     {
-        scan.setPosition(pos);
+        //scan.setPosition(pos);
         G(vect);
     }
     else

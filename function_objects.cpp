@@ -52,6 +52,12 @@ void load_function_objects(object_storage *stor)
     func = new func_median();
     stor->addObject("median", func);
 
+    func = new func_left();
+    stor->addObject("left", func);
+
+    func = new func_right();
+    stor->addObject("right", func);
+
     func = new func_transp();
     stor->addObject("transp", func);
 
@@ -78,6 +84,21 @@ void load_function_objects(object_storage *stor)
 
     func = new func_design_control();
     stor->addObject("designControl", func);
+
+    func = new func_rand();
+    stor->addObject("rand", func);
+
+    func = new func_eye();
+    stor->addObject("eye", func);
+
+    func = new func_ones();
+    stor->addObject("ones", func);
+
+    func = new func_elementwise_product();
+    stor->addObject("elemProd", func);
+
+    func = new func_kroneker_product();
+    stor->addObject("kronProd", func);
 
 }
 
@@ -488,6 +509,72 @@ stored_object* func_median::operator ()(vector<stored_object*> &args)
         for(size_t j = 0; j != interval_arg->getColumns(); ++j)
             res->getMatrix()(i, j) =
                     boost::numeric::median(interval_arg->getMatrix()(i, j));
+
+    return res;
+}
+
+stored_object* func_left::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *res = 0;
+    interval_matrix_object *interval_arg = 0;
+    if (numeric_matrix_object *num_obj =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        interval_arg = convertNumericToInterval(num_obj);
+    }
+    else if (interval_matrix_object *interval_obj =
+            dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_arg = interval_obj;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    res = new numeric_matrix_object(interval_arg->getRows(), interval_arg->getColumns());
+    for (size_t i = 0; i != interval_arg->getRows(); ++i)
+        for(size_t j = 0; j != interval_arg->getColumns(); ++j)
+            res->getMatrix()(i, j) =
+                    boost::numeric::lower(interval_arg->getMatrix()(i, j));
+
+    return res;
+}
+
+stored_object* func_right::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 1)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *res = 0;
+    interval_matrix_object *interval_arg = 0;
+    if (numeric_matrix_object *num_obj =
+            dynamic_cast<numeric_matrix_object*>(args[0]))
+    {
+        interval_arg = convertNumericToInterval(num_obj);
+    }
+    else if (interval_matrix_object *interval_obj =
+            dynamic_cast<interval_matrix_object*>(args[0]))
+    {
+        interval_arg = interval_obj;
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    res = new numeric_matrix_object(interval_arg->getRows(), interval_arg->getColumns());
+    for (size_t i = 0; i != interval_arg->getRows(); ++i)
+        for(size_t j = 0; j != interval_arg->getColumns(); ++j)
+            res->getMatrix()(i, j) =
+                    boost::numeric::upper(interval_arg->getMatrix()(i, j));
 
     return res;
 }
@@ -969,5 +1056,200 @@ stored_object* func_design_control::operator ()(vector<stored_object*> &args)
     return res;
 }
 
+stored_object* func_rand::operator ()(vector<stored_object*> &args)
+{
+    if (args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *rows_obj = 0,
+            *columns_obj = 0;
+
+    if (!(rows_obj = dynamic_cast<numeric_matrix_object*>(args[0])) ||
+            !(columns_obj = dynamic_cast<numeric_matrix_object*>(args[1])))
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    if (rows_obj->getRows() != 1 ||
+            rows_obj->getColumns() != 1 ||
+            columns_obj->getRows() != 1 ||
+            columns_obj->getColumns() != 1)
+    {
+        throw size_mismatch("Expected scalar");
+    }
+
+    int rows = (int)rows_obj->getMatrix()(0, 0),
+            columns = (int)columns_obj->getMatrix()(0, 0);
+    if(rows_obj->getMatrix()(0, 0) - rows != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+    if(columns_obj->getMatrix()(0, 0) - columns != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+
+    matrix<double> *matr = num_methods::randMatrix(rows, columns);
+    numeric_matrix_object *res = new numeric_matrix_object(*matr);
+    delete matr;
+
+    return res;
 }
+
+stored_object* func_eye::operator ()(vector<stored_object*> &args)
+{
+    if (args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *rows_obj = 0,
+            *columns_obj = 0;
+
+    if (!(rows_obj = dynamic_cast<numeric_matrix_object*>(args[0])) ||
+            !(columns_obj = dynamic_cast<numeric_matrix_object*>(args[1])))
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    if (rows_obj->getRows() != 1 ||
+            rows_obj->getColumns() != 1 ||
+            columns_obj->getRows() != 1 ||
+            columns_obj->getColumns() != 1)
+    {
+        throw size_mismatch("Expected scalar");
+    }
+
+    int rows = (int)rows_obj->getMatrix()(0, 0),
+            columns = (int)columns_obj->getMatrix()(0, 0);
+    if(rows_obj->getMatrix()(0, 0) - rows != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+    if(columns_obj->getMatrix()(0, 0) - columns != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+
+    matrix<double> matr(rows, columns);
+    matr.fill(0);
+    int minCount = rows < columns ? rows : columns;
+    for (int i = 0; i < minCount; ++i)
+        matr(i, i) = 1;
+    numeric_matrix_object *res = new numeric_matrix_object(matr);
+
+    return res;
+}
+
+stored_object* func_ones::operator ()(vector<stored_object*> &args)
+{
+    if (args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    numeric_matrix_object *rows_obj = 0,
+            *columns_obj = 0;
+
+    if (!(rows_obj = dynamic_cast<numeric_matrix_object*>(args[0])) ||
+            !(columns_obj = dynamic_cast<numeric_matrix_object*>(args[1])))
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    if (rows_obj->getRows() != 1 ||
+            rows_obj->getColumns() != 1 ||
+            columns_obj->getRows() != 1 ||
+            columns_obj->getColumns() != 1)
+    {
+        throw size_mismatch("Expected scalar");
+    }
+
+    int rows = (int)rows_obj->getMatrix()(0, 0),
+            columns = (int)columns_obj->getMatrix()(0, 0);
+    if(rows_obj->getMatrix()(0, 0) - rows != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+    if(columns_obj->getMatrix()(0, 0) - columns != 0)
+    {
+        throw wrong_type("Rows count must be integer");
+    }
+
+    matrix<double> matr(rows, columns);
+    matr.fill(1);
+    numeric_matrix_object *res = new numeric_matrix_object(matr);
+
+    return res;
+}
+
+stored_object* func_elementwise_product::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    matrix_object *left = 0;
+    matrix_object *right = 0;
+
+    if(dynamic_cast<matrix_object*>(args[0]))
+    {
+        left = dynamic_cast<matrix_object*>(args[0]);
+    }
+    else
+    {
+        throw runtime_error("Wrong argument type");
+    }
+
+    if(dynamic_cast<matrix_object*>(args[1]))
+    {
+        right = dynamic_cast<matrix_object*>(args[1]);
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    matrix_object *result = &elementwiseProduct(*left, *right);
+
+    return result;
+}
+
+stored_object* func_kroneker_product::operator ()(vector<stored_object*> &args)
+{
+    if(args.size() != 2)
+    {
+        throw runtime_error("Wrong arguments count");
+    }
+
+    matrix_object *left = 0;
+    matrix_object *right = 0;
+
+    if(dynamic_cast<matrix_object*>(args[0]))
+    {
+        left = dynamic_cast<matrix_object*>(args[0]);
+    }
+    else
+    {
+        throw runtime_error("Wrong argument type");
+    }
+
+    if(dynamic_cast<matrix_object*>(args[1]))
+    {
+        right = dynamic_cast<matrix_object*>(args[1]);
+    }
+    else
+    {
+        throw wrong_type("Wrong argument type");
+    }
+
+    matrix_object *result = &kronekerProduct(*left, *right);
+
+    return result;
+}
+
+}  //namespace int_calc
 

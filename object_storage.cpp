@@ -519,6 +519,175 @@ interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj)
     return res;
 }
 
+matrix_object& elementwiseProduct(matrix_object &lhs, matrix_object &rhs)
+{
+    matrix_object *result = 0;
+
+    if(dynamic_cast<numeric_matrix_object*>(&lhs))
+    {
+        numeric_matrix_object *left_num =
+                dynamic_cast<numeric_matrix_object*>(&lhs);
+        if(dynamic_cast<numeric_matrix_object*>(&rhs))
+        {
+            numeric_matrix_object *right_num =
+                    dynamic_cast<numeric_matrix_object*>(&rhs);
+
+            numeric_matrix_object *num_res = 0;
+            num_res = new numeric_matrix_object(left_num->getMatrix());
+            num_res->getMatrix().elementwiseMult(right_num->getMatrix());
+
+            result = num_res;
+        }
+        else if(dynamic_cast<interval_matrix_object*>(&rhs))
+        {
+            interval_matrix_object *right_interval =
+                    dynamic_cast<interval_matrix_object*>(&rhs);
+
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(0, 0);
+
+            interval_res->getMatrix().assign(left_num->getMatrix());
+
+            interval_res->getMatrix().elementwiseMult(right_interval->getMatrix());
+
+            result = interval_res;
+        }
+        else
+        {
+            throw runtime_error("Unknown type");
+        }
+    }
+    else if(dynamic_cast<interval_matrix_object*>(&lhs))
+    {
+        interval_matrix_object *left_interval =
+                dynamic_cast<interval_matrix_object*>(&lhs);
+        if(dynamic_cast<numeric_matrix_object*>(&rhs))
+        {
+            numeric_matrix_object *right_num =
+                    dynamic_cast<numeric_matrix_object*>(&rhs);
+
+            interval_matrix_object *interval_res = 0;
+
+            interval_res = new interval_matrix_object(left_interval->getMatrix());
+
+            interval_res->getMatrix().elementwiseMult(right_num->getMatrix());
+
+            result = interval_res;
+        }
+        else if(dynamic_cast<interval_matrix_object*>(&rhs))
+        {
+            interval_matrix_object *right_interval =
+                    dynamic_cast<interval_matrix_object*>(&rhs);
+
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(0, 0);
+
+            interval_res->getMatrix().assign(left_interval->getMatrix());
+
+            interval_res->getMatrix().elementwiseMult(right_interval->getMatrix());
+
+            result = interval_res;
+        }
+        else
+        {
+            throw runtime_error("Unknown type");
+        }
+    }
+    else
+    {
+        throw runtime_error("Unknown type");
+    }
+
+    return *result;
+}
+
+matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs)
+{
+    matrix_object *result = 0;
+
+    if(dynamic_cast<numeric_matrix_object*>(&lhs))
+    {
+        numeric_matrix_object *left_num =
+                dynamic_cast<numeric_matrix_object*>(&lhs);
+        if(dynamic_cast<numeric_matrix_object*>(&rhs))
+        {
+            numeric_matrix_object *right_num =
+                    dynamic_cast<numeric_matrix_object*>(&rhs);
+
+            numeric_matrix_object *num_res =
+                    new numeric_matrix_object(0, 0);
+            matrix<double>::kronekerProduct(num_res->getMatrix(),
+                                            left_num->getMatrix(), right_num->getMatrix());
+
+            result = num_res;
+        }
+        else if(dynamic_cast<interval_matrix_object*>(&rhs))
+        {
+            interval_matrix_object *right_interval =
+                    dynamic_cast<interval_matrix_object*>(&rhs);
+
+            matrix<d_interval> left_interval_matr;
+            left_interval_matr.assign(left_num->getMatrix());
+
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(0, 0);
+
+            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+                                            left_interval_matr, right_interval->getMatrix());
+
+            result = interval_res;
+        }
+        else
+        {
+            throw runtime_error("Unknown type");
+        }
+    }
+    else if(dynamic_cast<interval_matrix_object*>(&lhs))
+    {
+        interval_matrix_object *left_interval =
+                dynamic_cast<interval_matrix_object*>(&lhs);
+        if(dynamic_cast<numeric_matrix_object*>(&rhs))
+        {
+            numeric_matrix_object *right_num =
+                    dynamic_cast<numeric_matrix_object*>(&rhs);
+
+            matrix<d_interval> right_interval_matr;
+            right_interval_matr.assign(right_num->getMatrix());
+
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(0, 0);
+
+            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+                                            left_interval->getMatrix(), right_interval_matr);
+
+            result = interval_res;
+        }
+        else if(dynamic_cast<interval_matrix_object*>(&rhs))
+        {
+            interval_matrix_object *right_interval =
+                    dynamic_cast<interval_matrix_object*>(&rhs);
+
+            interval_matrix_object *interval_res =
+                    new interval_matrix_object(0, 0);
+
+            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+                                            left_interval->getMatrix(), right_interval->getMatrix());
+
+            result = interval_res;
+        }
+        else
+        {
+            throw runtime_error("Unknown type");
+        }
+    }
+    else
+    {
+        throw runtime_error("Unknown type");
+    }
+
+    return *result;
+}
+
 
 
 //*************************************************************************************

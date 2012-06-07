@@ -23,6 +23,11 @@ matrix<double>& designFeedbackControl(matrix<d_interval> &A,
 void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
                    double t0, double t1, vector< matrix<d_interval> > &res);
 
+void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
+                  double t0, double t1, vector< matrix<double> > &res);
+
+matrix<double>* randMatrix(size_t n, size_t m);
+
 }
 }
 
