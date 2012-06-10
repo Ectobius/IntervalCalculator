@@ -19,6 +19,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //Инициализация treeWidget
+    ui->treeWidget->setColumnCount(2);
+    QStringList labels;
+    labels.append(trUtf8("Имя"));
+    labels.append(trUtf8("Размер"));
+    ui->treeWidget->setHeaderLabels(labels);
+
 
 
     SignalingStorage *signStor = new SignalingStorage();
@@ -35,8 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->executeButton, SIGNAL(clicked()), this, SLOT(executeCommand()));
     connect(ui->commandLineEdit, SIGNAL(returnPressed()), this, SLOT(executeCommand()));
-    connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
-            this, SLOT(editMatrix(QListWidgetItem*)));
+    connect(ui->treeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)),
+            this, SLOT(editMatrix(QTreeWidgetItem*)));
     connect(ui->addVarPushButton, SIGNAL(clicked()),
             this, SLOT(addMatrix()));
     connect(ui->delVarPushButton, SIGNAL(clicked()),
@@ -55,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionAboutQt, SIGNAL(triggered()),
             this, SLOT(aboutQt()));
+    connect(ui->actionAboutProgram, SIGNAL(triggered()),
+            this, SLOT(about()));
 
     //
     QList<int> splitSisez;
@@ -177,20 +186,27 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
 
 void MainWindow::updateVariableList()
 {
-    ui->listWidget->clear();
+    ui->treeWidget->clear();
+    QList<QTreeWidgetItem*> items;
+    QStringList columns;
     for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
     {
-        if (dynamic_cast<matrix_object*>(obj.getObject()))
+        if (matrix_object* matr_obj =
+                dynamic_cast<matrix_object*>(obj.getObject()))
         {
-            ui->listWidget->addItem(QString(obj.getName().c_str()));
+            columns.clear();
+            columns.append(QString::fromStdString(obj.getName()));
+            columns.append(trUtf8("%1x%2").arg(matr_obj->getRows()).arg(matr_obj->getColumns()));
+            items.append(new QTreeWidgetItem(columns));
         }
     }
-
+    ui->treeWidget->insertTopLevelItems(0, items);
 }
 
-void MainWindow::editMatrix(QListWidgetItem *item)
+void MainWindow::editMatrix(QTreeWidgetItem *item)
 {
-    std::string name = item->text().toStdString();
+    std::string name = item->text(0).toStdString();
+
     matrixEditingDialog->setMatrixName(QString(name.c_str()));
     stored_object *obj = storage->getObjectByName(name);
     if (dynamic_cast<matrix_object*>(obj))
@@ -224,15 +240,15 @@ void MainWindow::addMatrix()
 
 void MainWindow::deleteMatrix()
 {
-    if (ui->listWidget->selectedItems().isEmpty())
+    if (ui->treeWidget->selectedItems().isEmpty())
     {
         QMessageBox::warning(this, "",
                              QString::fromUtf8("Выделите элемент списка"));
         return;
     }
-    QListWidgetItem *item =
-            ui->listWidget->selectedItems()[0];
-    storage->deleteObject(item->text().toStdString());
+    QTreeWidgetItem *item =
+            ui->treeWidget->selectedItems()[0];
+    storage->deleteObject(item->text(0).toStdString());
 }
 
 void MainWindow::saveVariables()
@@ -397,6 +413,13 @@ void MainWindow::deleteVariables()
     {
         storage->deleteObject(*iter);
     }
+}
+
+void MainWindow::about()
+{
+    QMessageBox::about(this, trUtf8("О программе"),
+                       trUtf8("<h2>IntervalCalculator</h2>"
+                              "<p>Автор: студент гр. ПОВТ-71 Поповцев А.В., ФИТ, АлтГТУ, 2012</p>"));
 }
 
 void MainWindow::aboutQt()

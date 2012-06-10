@@ -111,6 +111,11 @@ class func_leverrier : public function_object
     virtual stored_object* operator ()(std::vector<stored_object*> &args);
 };
 
+class func_main_minors : public function_object
+{
+    virtual stored_object* operator ()(std::vector<stored_object*> &args);
+};
+
 class func_is_stable : public function_object
 {
     virtual stored_object* operator ()(std::vector<stored_object*> &args);

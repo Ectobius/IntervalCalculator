@@ -55,6 +55,7 @@ public:
     T det();
     T trace();
     void leverrier(matrix &pol);
+    void mainMinors(matrix<T> &poly, T (deter)(matrix<T>&));
 
 
     template <typename T1, typename T2>

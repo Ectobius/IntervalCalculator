@@ -443,6 +443,71 @@ template <typename T> void matrix<T>::leverrier(matrix<T> &pol)
 
 }
 
+template <typename T> T _mainMinorsSum(
+    matrix<T> &matr, bool *flags, int k, int cur_k, int pos, T (deter)(matrix<T>&))
+{
+    if (cur_k == 0)
+    {
+        matrix<T> minor(k, k);
+        for (int i = 0, row = 0; i != matr.getRows(); ++i)
+        {
+            if (flags[i])
+            {
+                for (int j = 0, col = 0; j != matr.getColumns(); ++j)
+                {
+                    if (flags[j])
+                    {
+                        minor(row, col) = matr(i, j);
+                        ++col;
+                    }
+                }
+                ++row;
+            }
+        }
+        return deter(minor);
+    }
+
+    T sum(0);
+    for (int i = pos; i <= matr.getRows() - cur_k; ++i)
+    {
+        flags[i] = true;
+        sum += _mainMinorsSum(matr, flags, k, cur_k - 1, i + 1, deter);
+        flags[i] = false;
+    }
+
+    return sum;
+}
+
+template <typename T> void matrix<T>::mainMinors(matrix<T> &poly, T (deter)(matrix<T>&))
+{
+    if (this->getRows() != this->getColumns())
+    {
+        throw size_mismatch("Expected square matrix");
+    }
+
+    size_t n = this->getRows();
+    if (poly.getColumns() != n + 1 || poly.getRows() != 1)
+    {
+        poly.resize(1, n + 1);
+    }
+
+    poly(0, 0) = 1;
+    poly(0, 1) = -this->trace();
+
+    bool *flags = new bool[n];
+    for (int i = 2; i <= n; ++i)
+    {
+        for (int j = 0; j != n; ++j)
+            flags[j] = false;
+        poly(0, i) = _mainMinorsSum(*this, flags, i, i, 0, deter);
+        if (i % 2)
+        {
+            poly(0, i) = -poly(0, i);
+        }
+    }
+    delete [] flags;
+}
+
 /*Метод, осуществляющий умножение матриц*/
 template <typename T> template <typename T1, typename T2>
 void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)

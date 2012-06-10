@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QListWidget>
+#include <QTreeWidget>
 #include <QTextStream>
 #include <QList>
 #include "object_storage.h"
@@ -37,7 +37,7 @@ private:
 private slots:
     void executeCommand();
     void updateVariableList();
-    void editMatrix(QListWidgetItem *item);
+    void editMatrix(QTreeWidgetItem *item);
     void addMatrix();
     void deleteMatrix();
     void saveVariables();
@@ -46,6 +46,7 @@ private slots:
     void clearConsole();
     void deleteVariables();
 
+    void about();
     void aboutQt();
 
 protected:

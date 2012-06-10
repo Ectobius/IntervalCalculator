@@ -28,6 +28,7 @@ void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
 
 matrix<double>* randMatrix(size_t n, size_t m);
 
+
 }
 }
 
