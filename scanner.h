@@ -7,47 +7,86 @@
 namespace int_calc
 {
 
+/*!
+  \brief Класс сканера.
+ */
 class scanner
 {
 public:
 
+    /*!
+      \brief Типы лексем языка выражений.
+     */
     enum lexem_type
     {
-        identifier,
-        number,
-        assignment,
-        plus,
-        minus,
-        mult,
-        div,
-        opening_bracket,
-        closing_bracket,
-        opening_square_bracket,
-        closing_square_bracket,
-        semicolon,
-        opening_brace,
-        closing_brace,
-        comma,
-        command,
-        end_expression,
-        error_type
+        identifier,             /*!< Идентификатор. */
+        number,                 /*!< Число. */
+        assignment,             /*!< Знак равенства. */
+        plus,                   /*!< Знак плюс. */
+        minus,                  /*!< Знак минус. */
+        mult,                   /*!< Знак умножения. */
+        div,                    /*!< Знак деления. */
+        opening_bracket,        /*!< Открывающая скобка. */
+        closing_bracket,        /*!< Закрывающая скобка. */
+        opening_square_bracket, /*!< Открывающая квадратная скобка. */
+        closing_square_bracket, /*!< Закрывающая квадратная скобка. */
+        semicolon,              /*!< Точка с запятой. */
+        opening_brace,          /*!< Открывающая фигурная скобка. */
+        closing_brace,          /*!< Закрывающая фигурная скобка. */
+        comma,                  /*!< Запятая. */
+        command,                /*!< Команда (#identificator). */
+        end_expression,         /*!< Конец выражения. */
+        error_type              /*!< Ошибочный символ. */
     };
 
+    /*!
+      \brief Тип для хранения позиции в тексте.
+     */
     typedef std::string::size_type position_type;
 
-    scanner();
+    /*!
+      \brief Конструктор по умолчанию.
+     */
+    scanner() :
+        pos(0)
+    {
+    }
+
+    /*!
+      \brief Конструктор, инициализирующий строку со сканируемым текстом.
+     */
     scanner(const std::string &str) :
-        text(str), pos(0) { }
+        text(str),
+        pos(0)
+    {
+    }
+
+    /*!
+      \return Ссылка на сканируемый текст.
+     */
     const std::string& getText() const { return text; }
+    /*!
+      \brief Устанавливает сканируемую строку.
+      \param str  Сканируемая строка.
+     */
     void setText(const std::string &str) { text = str; pos = 0; }
 
     lexem_type scanNext(std::string &lex);
+
+    /*!
+      \return Текущая позиция в тексте.
+     */
     position_type getPosition() { return pos; }
+
+    /*!
+      \brief Устанавливает текущую позицию в тексте.
+      \param new_pos Устанавливаемая позиция в тексте.
+     */
     void setPosition(position_type new_pos) { pos = new_pos; }
 
 private:
-    std::string text;
-    position_type pos;
+    std::string text;   /*!< Сканируемый текст. */
+    position_type pos;  /*!< Текущая позиция в тексте. */
 };
 
 }

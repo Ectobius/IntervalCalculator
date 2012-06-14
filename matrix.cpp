@@ -10,14 +10,26 @@ using namespace std;
 namespace int_calc
 {
 
-/*Конструктор по умолчанию*/
-template <typename T> matrix<T>::matrix(): rows(0), columns(0), matr_ptr(0)
+/*!
+  \brief Конструктор по умолчанию.
+ */
+template <typename T> matrix<T>::matrix() :
+    rows(0),
+    columns(0),
+    matr_ptr(0)
 {
 
 }
 
-/*Конструктор, создающий матрицу заданного размера*/
-template <typename T> matrix<T>::matrix(size_t r, size_t c): rows(r), columns(c), matr_ptr(0)
+/*!
+  \brief Конструктор, создающий матрицу заданного размера/
+  \param r Количество строк матрицы.
+  \param c Количество столбцов матрицы.
+ */
+template <typename T> matrix<T>::matrix(size_t r, size_t c) :
+    rows(r),
+    columns(c),
+    matr_ptr(0)
 {
     matr_ptr = new T*[rows];
     for(size_t i = 0; i != rows; ++i)
@@ -26,7 +38,9 @@ template <typename T> matrix<T>::matrix(size_t r, size_t c): rows(r), columns(c)
     }
 }
 
-/*Метод, освобождающий память, занятую матрицей*/
+/*!
+  \brief Метод, освобождающий память, занятую матрицей/
+ */
 template <typename T> void matrix<T>::destroy()
 {
     for(size_t i = 0; i != rows; ++i)
@@ -39,7 +53,11 @@ template <typename T> void matrix<T>::destroy()
     columns = 0;
 }
 
-/*Метод выделяющий память под элементы матрицы и копирующий их из другой матрицы*/
+/*!
+  \brief Метод выделяющий память под элементы матрицы и копирующий их из другой матрицы.
+  \tparam TR Тип элементов копируемой матрицы.
+  \param M Копируемая матрица.
+ */
 template <typename T> template <typename TR> void
 matrix<T>::copy_elems(const matrix<TR>& M)
 {
@@ -58,6 +76,12 @@ matrix<T>::copy_elems(const matrix<TR>& M)
     columns = M.columns;
 }
 
+/*!
+  \brief Выделяет память под элементы матрицы заданного размера.
+  \param r Количество строк.
+  \param c Количество столбцов.
+  \return Указатель на выделенную область памяти.
+ */
 template <typename T> T** matrix<T>::allocate_elems(size_t r, size_t c)
 {
     T** res_ptr = new T*[r];
@@ -69,13 +93,23 @@ template <typename T> T** matrix<T>::allocate_elems(size_t r, size_t c)
     return res_ptr;
 }
 
-/*Конструктор копирования*/
-template <typename T> matrix<T>::matrix(const matrix &M): rows(M.rows), columns(M.columns), matr_ptr(0)
+/*!
+  \brief Конструктор копирования.
+  \param M Копируемая матрица.
+ */
+template <typename T> matrix<T>::matrix(const matrix &M) :
+    rows(M.rows),
+    columns(M.columns),
+    matr_ptr(0)
 {
     copy_elems(M);
 }
 
-/*Оператор присваивания*/
+/*!
+  \brief Оператор присваивания.
+  \param M Присваиваемая матрица.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> matrix<T>&
 matrix<T>::operator=(const matrix<T> &M)
 {
@@ -84,12 +118,19 @@ matrix<T>::operator=(const matrix<T> &M)
     return *this;
 }
 
-/*Деструктор*/
+/*!
+  \brief Деструктор.
+ */
 template <typename T> matrix<T>::~matrix()
 {
     destroy();
 }
 
+/*!
+  \brief Изменяет размеры матрицы.
+  \param newRows Новое количество строк.
+  \param newColumns Новое количество столбцов.
+ */
 template <typename T> void matrix<T>::resize(size_t newRows, size_t newColumns)
 {
     destroy();
@@ -98,7 +139,10 @@ template <typename T> void matrix<T>::resize(size_t newRows, size_t newColumns)
     columns = newColumns;
 }
 
-/*Метод для заполнения матрицы заданным значением*/
+/*!
+  \brief Присваивает заданное значение всем элементам матрицы.
+  \param orig Значение, присваимаемое элементам матрицы.
+ */
 template <typename T> void matrix<T>::fill(const T &orig)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -110,14 +154,32 @@ template <typename T> void matrix<T>::fill(const T &orig)
     }
 }
 
-/*Метод для присвоения другой матрицы совместимого типа*/
+/*!
+  \brief Присвоение матрицы совместимого типа.
+
+  Присваивает данной матрице другую матрицу с элементами,
+  тип которых допускает присвоение типу элементов данной матрицы.
+
+  \tparam TR Тип элементов присваиваемой матрицы.
+  \param M Присваиваемая матрица.
+ */
 template <typename T> template <typename TR> void matrix<T>::assign(const matrix<TR> &M)
 {
     destroy();
     copy_elems(M);
 }
 
-/*Метод, копирующий заданную область из другой матрицы*/
+/*!
+  \brief Копирует заданную область из другой матрицы.
+  \tparam TR Тип элементов матрицы, откуда копируется область.
+  \param dest_row Индекс первой строки области, куда нужно скопировать.
+  \param dest_row Индекс первого столбца области, куда нужно скопировать.
+  \param row_count Количество копируемых строк.
+  \param col_count Количество копируемых столбцов.
+  \param src Матрица, из которой копируется область.
+  \param dest_row Индекс первой строки копируемой области.
+  \param dest_row Индекс первого столбца копируемой области.
+ */
 template <typename T> template <typename TR> void matrix<T>::copyArea(size_t dest_row, size_t dest_col,
                                      size_t row_count, size_t col_count, matrix<TR> &src,
                                      size_t src_row, size_t src_col)
@@ -127,7 +189,7 @@ template <typename T> template <typename TR> void matrix<T>::copyArea(size_t des
             src_row + row_count > src.getRows() ||
             src_col + col_count > src.getColumns())
     {
-        throw out_of_range("Specified area is out of range");
+        throw runtime_error("Specified area is out of range");
     }
 
     for(size_t i = 0; i != row_count; ++i)
@@ -140,7 +202,12 @@ template <typename T> template <typename TR> void matrix<T>::copyArea(size_t des
     }
 }
 
-/*Метод, возвращающий ссылку на элемент матрицы*/
+/*!
+  \brief Возвращает ссылку на элемент матрицы.
+  \param r Номер строки.
+  \param c Номер столбца.
+  \return Ссылка на элемент матрицы.
+ */
 template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
 {
     if(r >= rows || c >= columns)
@@ -150,7 +217,12 @@ template <typename T> T& matrix<T>::operator()(size_t r, size_t c)
     return matr_ptr[r][c];
 }
 
-/*Константный метод, возвращающий константную ссылку на элемент матрицы*/
+/*!
+  \brief Константный метод, возвращающий константную ссылку на элемент матрицы.
+  \param r Номер строки.
+  \param c Номер столбца.
+  \return Константная ссылка на элемент матрицы.
+ */
 template <typename T> const T& matrix<T>::operator()(size_t r, size_t c) const
 {
     if(r >= rows || c >= columns)
@@ -160,7 +232,12 @@ template <typename T> const T& matrix<T>::operator()(size_t r, size_t c) const
     return matr_ptr[r][c];
 }
 
-/*Составной оператор присвоения для сложения матриц*/
+/*!
+  \brief Составной оператор присвоения для сложения матриц.
+  \tparam TR Тип элементов правого операнда.
+  \param rhs Правый операнд оператора.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(const matrix<TR> &rhs)
 {
     if(rows != rhs.rows || columns != rhs.columns)
@@ -179,7 +256,12 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(co
     return *this;
 }
 
-/*Составной оператор присвоения для вычитания матриц*/
+/*!
+  \brief Составной оператор присвоения для вычитания матриц.
+  \tparam TR Тип элементов правого операнда.
+  \param rhs Правый операнд оператора.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(const matrix<TR> &rhs)
 {
     if(rows != rhs.rows || columns != rhs.columns)
@@ -198,7 +280,16 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(co
     return *this;
 }
 
-/*Составной оператор присвоения для деления матрицы на заданное значение*/
+/*!
+  \brief Составной оператор присвоения для деления матрицы на заданное значение.
+
+  Правый операнд должен быть размера 1x1. Элементы левого операнда делятся
+  на единственный элемент правого.
+
+  \tparam TR Тип элементов правого операнда.
+  \param rhs Правый операнд оператора.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(const matrix<TR> &rhs)
 {
     if(rhs.getRows() != 1 || rhs.getColumns() != 1)
@@ -211,7 +302,12 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(co
     return *this;
 }
 
-/*Составной оператор присвоения для сложения матрицы с заданным значением*/
+/*!
+  \brief Составной оператор присвоения для сложения матрицы с заданным значением.
+  \tparam TR Тип правого операнда.
+  \param rhs Значение, прибавляемое к элементам левого операнда.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -225,7 +321,12 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator+=(co
     return *this;
 }
 
-/*Составной оператор присвоения для вычитания из матрицы заданного значения*/
+/*!
+  \brief Составной оператор присвоения для вычитания заданного значения из матрицы.
+  \tparam TR Тип правого операнда.
+  \param rhs Значение, вычитаемое из элементов левого операнда.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -239,7 +340,12 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator-=(co
     return *this;
 }
 
-/*Составной оператор присвоения для умножения матрицы на заданное значение*/
+/*!
+  \brief Составной оператор присвоения для умножения матрицы на заданное значение.
+  \tparam TR Тип правого операнда.
+  \param rhs Значение, на которое умножается матрица.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator*=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -253,7 +359,12 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator*=(co
     return *this;
 }
 
-/*Составной оператор присвоения для деления матрицы на заданное значение*/
+/*!
+  \brief Составной оператор присвоения для деления матрицы на заданное значение.
+  \tparam TR Тип правого операнда.
+  \param rhs Значение, на которое делится матрица.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(const TR &val)
 {
     for(size_t i = 0; i != rows; ++i)
@@ -267,6 +378,11 @@ template <typename T> template <typename TR> matrix<T>& matrix<T>::operator/=(co
     return *this;
 }
 
+/*!
+  \brief Поэлементное произведение матриц.
+  \tparam TR Тип элементов матрицы-аргумента.
+  \param rhs Матрица, на которую поэлементно умножается данная матрица.
+ */
 template <typename T> template <typename TR> void matrix<T>::elementwiseMult(const matrix<TR> &rhs)
 {
     if(rows != rhs.rows || columns != rhs.columns)
@@ -283,6 +399,13 @@ template <typename T> template <typename TR> void matrix<T>::elementwiseMult(con
     }
 }
 
+/*!
+  \brief Транспонирование матрицы.
+
+  Транспонирует матрицу и возвращает ссылку на нее.
+
+  \return Ссылка на данную матрицу после транспонирования.
+ */
 template <typename T> matrix<T>& matrix<T>::transp()
 {
     size_t r = rows;
@@ -302,6 +425,11 @@ template <typename T> matrix<T>& matrix<T>::transp()
     return *this;
 }
 
+
+/*!
+  \brief Вычисляет определитель разложением по строке.
+  \return Значение определителя.
+ */
 template <typename T> T matrix<T>::det()
 {
     if(rows != columns)
@@ -320,7 +448,7 @@ template <typename T> T matrix<T>::det()
     for(size_t i = 0; i < columns; ++i)
         columns_flags[i] = false;
 
-    T result = recurse_det(rows);
+    T result = _recurse_det(rows);
     delete rows_flags;
     delete columns_flags;
     rows_flags = 0;
@@ -328,7 +456,12 @@ template <typename T> T matrix<T>::det()
     return result;
 }
 
-template <typename T> T matrix<T>::recurse_det(size_t order)
+/*!
+  \brief Рекурсивный метод вычисления дополнительного минора разложением по строке.
+  \param order Текущий порядок дополнительного минора.
+  \return Значение дополнительного минора.
+ */
+template <typename T> T matrix<T>::_recurse_det(size_t order)
 {
     T epsT = T(1e-8);
     T result = T(0);
@@ -383,7 +516,7 @@ template <typename T> T matrix<T>::recurse_det(size_t order)
                     (matr_ptr[chosenRow][j] < -epsT || matr_ptr[chosenRow][j] > epsT))
             {
                 columns_flags[j] = true;
-                curDet = recurse_det(order - 1);
+                curDet = _recurse_det(order - 1);
                 columns_flags[j] = false;
                 if((initRow + j) % 2)
                 {
@@ -400,6 +533,10 @@ template <typename T> T matrix<T>::recurse_det(size_t order)
     return result;
 }
 
+/*!
+  \brief Вычисляет след матрицы.
+  \return След матрицы.
+ */
 template <typename T> T matrix<T>::trace()
 {
     if(rows != columns)
@@ -414,13 +551,17 @@ template <typename T> T matrix<T>::trace()
     return result;
 }
 
+/*!
+  \brief Вычисляет характеристический полином матрицы методом Леверье.
+  \param pol Выходной параметр, куда будет записан полином.
+ */
 template <typename T> void matrix<T>::leverrier(matrix<T> &pol)
 {
     if(rows != columns)
     {
         throw size_mismatch("It is not a square matrix");
     }
-    pol.assign(matrix<T>(1, rows + 1));
+    pol.resize(1, rows + 1);
     pol.fill(T(0));
     pol(0, 0) = 1;
 
@@ -443,6 +584,16 @@ template <typename T> void matrix<T>::leverrier(matrix<T> &pol)
 
 }
 
+/*!
+  \brief Рекурсивный метод вычисления суммы главных миноров матрицы.
+  \param matr Матрица, сумма главных миноров которой вычисляется.
+  \param flags Массив флагов, отмечающих строки и столбцы минора.
+  \param k Порядок вычисляемого минора.
+  \param cur_k Количество строк, которые нужно еще отметить для полуения минора порядка k.
+  \param pos Строка и столбец матрицы, начиная с которой можно выбирать отмечаемые строки и столбцы.
+  \param deter Функция вычисления определителя матрицы.
+  \return Текущее значение суммы.
+ */
 template <typename T> T _mainMinorsSum(
     matrix<T> &matr, bool *flags, int k, int cur_k, int pos, T (deter)(matrix<T>&))
 {
@@ -478,6 +629,11 @@ template <typename T> T _mainMinorsSum(
     return sum;
 }
 
+/*!
+  \brief Вычисляет характеристический полином матрицы методом главных миноров.
+  \param poly Выходной параметр, куда будет записан полином.
+  \param deter Функция вычисления определителя матрицы.
+ */
 template <typename T> void matrix<T>::mainMinors(matrix<T> &poly, T (deter)(matrix<T>&))
 {
     if (this->getRows() != this->getColumns())
@@ -508,7 +664,14 @@ template <typename T> void matrix<T>::mainMinors(matrix<T> &poly, T (deter)(matr
     delete [] flags;
 }
 
-/*Метод, осуществляющий умножение матриц*/
+/*!
+  \brief Умножение матриц.
+  \tparam T1 Тип элементов левого операнда.
+  \tparam T2 Тип элементов правого операнда.
+  \param res Выходной параметр, куда будет записан результат умножения.
+  \param matr1 Левый операнд.
+  \param matr2 Правый операнд.
+ */
 template <typename T> template <typename T1, typename T2>
 void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
 {
@@ -551,6 +714,14 @@ void matrix<T>::multiply(matrix<T> &res, matrix<T1> &matr1, matrix<T2> &matr2)
     }
 }
 
+/*!
+  \brief Кронекерово произведение матриц.
+  \tparam T1 Тип элементов левого операнда.
+  \tparam T2 Тип элементов правого операнда.
+  \param res Выходной параметр, куда будет записано кронекерово произведение.
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+ */
 template <typename T> template <typename T1, typename T2>
 void matrix<T>::kronekerProduct(matrix<T> &res, matrix<T1> &lhs, matrix<T2> &rhs)
 {
@@ -578,6 +749,11 @@ void matrix<T>::kronekerProduct(matrix<T> &res, matrix<T1> &lhs, matrix<T2> &rhs
     return;
 }
 
+/*!
+  \brief Единичная матрица порядка n.
+  \param n Порядок матрицы.
+  \return Ссылка на созданную матрицу.
+ */
 template <typename T> matrix<T>& matrix<T>::eyeMatrix(size_t n)
 {
     matrix<T> *res = new matrix<T>(n, n);
@@ -587,7 +763,13 @@ template <typename T> matrix<T>& matrix<T>::eyeMatrix(size_t n)
     return *res;
 }
 
-template <typename T> void formControllabilityMatrix(matrix<T> &A, matrix<T> &B, matrix<T> &res)
+/*!
+  \brief Формирование матрицы управляемости для пары матриц (A, B)
+  \param res Выходной параметр, куда будет записана матрица управляемости.
+  \param A Квадратная матрица nxn.
+  \param B Матрица nxm.
+ */
+template <typename T> void formControllabilityMatrix(matrix<T> &res, matrix<T> &A, matrix<T> &B)
 {
     if (A.getRows() != A.getColumns())
     {
@@ -620,6 +802,12 @@ template <typename T> void formControllabilityMatrix(matrix<T> &A, matrix<T> &B,
 
 }
 
+/*!
+  \brief Оператор вывода матрицы.
+  \param os Ссылка на поток вывода std::ostream
+  \param M Ссылка на выводимую матрицу.
+  \return Ссылка на левый операнд.
+ */
 template <typename T> std::ostream& operator <<(ostream &os, const matrix<T> &M)
 {
     for(size_t i = 0; i != M.getRows(); ++i)

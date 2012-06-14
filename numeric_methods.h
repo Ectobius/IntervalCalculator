@@ -1,11 +1,25 @@
+/*!
+  \file numeric_methods.h
+
+  Содержит реализации некоторых численных методов.
+ */
+
 #ifndef NUMERIC_METHODS_H
 #define NUMERIC_METHODS_H
 
 #include "matrix.h"
 #include "object_storage.h"
 
+
+/*!
+  Пространство имен, содержащее классы ядра приложения.
+ */
 namespace int_calc
 {
+
+/*!
+  Пространство имен, содержащее реализации некоторых численных методов.
+ */
 namespace num_methods
 {
 
@@ -15,13 +29,13 @@ int re_split(int dim, double *A, double *b, double *x, double eps, double tau, i
 int subdiff(int dim, double *A, double *b, double *x, double eps, double tau, int iterLim);
 double determinant(matrix<double> &matr);
 bool isStablePolynom(matrix<double> &poly);
-bool haritonovCritery(matrix<d_interval> &poly);
+bool haritonovCritery(matrix<interval_double> &poly);
 bool inverseMatrix(matrix<double> &matr, matrix<double> &res);
-matrix<double>& designFeedbackControl(matrix<d_interval> &A,
-                                          matrix<d_interval> &b, matrix<d_interval> &D);
+matrix<double>& designFeedbackControl(matrix<interval_double> &A,
+                                          matrix<interval_double> &b, matrix<interval_double> &D);
 
-void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
-                   double t0, double t1, vector< matrix<d_interval> > &res);
+void intervalEuler(matrix<interval_double> &A, matrix<interval_double> &x0, double h,
+                   double t0, double t1, vector< matrix<interval_double> > &res);
 
 void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
                   double t0, double t1, vector< matrix<double> > &res);

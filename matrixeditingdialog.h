@@ -9,6 +9,9 @@ namespace Ui {
     class MatrixEditingDialog;
 }
 
+/*!
+  \brief Класс, представляющий окно редактирования матрицы.
+ */
 class MatrixEditingDialog : public QDialog
 {
     Q_OBJECT
@@ -22,13 +25,12 @@ public:
 
 private:
     Ui::MatrixEditingDialog *ui;
-
-    int_calc::matrix_object *editedMatrix;
-    int_calc::object_storage *stor;
-    QString matrixName;
-    int rowsCount;
-    int columnsCount;
-    QRegExp cellRegExp;
+    int_calc::matrix_object *editedMatrix;  /*!< Редактируемая матрица. */
+    int_calc::object_storage *stor; /*!< Хранилище переменных. */
+    QString matrixName;             /*!< Имя редактируемой матрицы. */
+    int rowsCount;                  /*!< Количество строк таблицы. */
+    int columnsCount;               /*!< Количество столбцов таблицы. */
+    QRegExp cellRegExp;             /*!< Регулярное выражение для проверки текста в ячейке таблицы. */
 
 private slots:
     void changeRowsCount(int cnt);

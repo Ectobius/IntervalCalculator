@@ -445,6 +445,11 @@ int subdiff(int dim, double *A, double *b, double *x, double eps, double tau, in
 }
 
 
+/*!
+  \brief Вычисляет определитель числовой матрицы приведением к треугольному виду.
+  \param matr Числовая матрица.
+  \return Значение определителя.
+ */
 double determinant(matrix<double> &matr)
 {
     if(matr.getRows() != matr.getColumns())
@@ -502,6 +507,13 @@ double determinant(matrix<double> &matr)
     return det;
 }
 
+
+/*!
+  \brief Проверяет вещественный полином на устойчивость по критерию Гурвица.
+  \param poly Исследуемый на устойчивость полином. Матрица-строка,
+  коэффициенты по убыванию степеней.
+  \return true - полином устойчив, false - не устойчив.
+ */
 bool isStablePolynom(matrix<double> &poly)
 {
     if (poly.getRows() != 1)
@@ -550,7 +562,13 @@ bool isStablePolynom(matrix<double> &poly)
     return isStable;
 }
 
-bool haritonovCritery(matrix<d_interval> &poly)
+/*!
+  \brief Проверяет интервальный полином на устойчивость по критерию Харитонова.
+  \param poly Исследуемый на устойчивость полином. Матрица-строка,
+  коэффициенты по убыванию степеней.
+  \return true - полином устойчив, false - не устойчив.
+ */
+bool haritonovCritery(matrix<interval_double> &poly)
 {
     int n = poly.getColumns() - 1;
     matrix<double> num_poly(1, n + 1);
@@ -579,6 +597,12 @@ bool haritonovCritery(matrix<d_interval> &poly)
     return isStable;
 }
 
+/*!
+  \brief Находит обратную матрицу.
+  \param matr Числовая матрица.
+  \param res Выходной параметр для результата.
+  \return true - обратная существует и найдена, false - матрица вырожденная.
+ */
 bool inverseMatrix(matrix<double> &matr, matrix<double> &res)
 {
     if(matr.getRows() != matr.getColumns())
@@ -680,8 +704,15 @@ bool inverseMatrix(matrix<double> &matr, matrix<double> &res)
     return true;
 }
 
-matrix<double>& designFeedbackControl(matrix<d_interval> &A,
-                                          matrix<d_interval> &b, matrix<d_interval> &D)
+/*!
+  \brief Рассчитывает управление в виде обратной связи.
+  \param A Квадратная nxn матрица системы.
+  \param b Столбец nx1.
+  \param D Желаемый полином - матрица 1x(n + 1).
+  \return Управление - строка 1xn.
+ */
+matrix<double>& designFeedbackControl(matrix<interval_double> &A,
+                                          matrix<interval_double> &b, matrix<interval_double> &D)
 {
     if (A.getRows() != A.getColumns())
     {
@@ -705,13 +736,13 @@ matrix<double>& designFeedbackControl(matrix<d_interval> &A,
     }
 
     int n = A.getRows();  //Порядок системы
-    matrix<d_interval> Y =  //Матрица управляемости
-            matrix<d_interval>(n, n);
+    matrix<interval_double> Y =  //Матрица управляемости
+            matrix<interval_double>(n, n);
 
     //Построение матрицы управляемости
     formControllabilityMatrix(A, b, Y);
 
-    matrix<d_interval> charact_poly(1, n + 1);  //Характеристический многочлен
+    matrix<interval_double> charact_poly(1, n + 1);  //Характеристический многочлен
 
     //Построение характеристического многочлена
     A.leverrier(charact_poly);
@@ -731,7 +762,7 @@ matrix<double>& designFeedbackControl(matrix<d_interval> &A,
         throw runtime_error("Criterion is not satisfied");
     }
 
-    matrix<d_interval> polyMatr(n, n);  //Матрица на основе коэффициентов хар. полинома
+    matrix<interval_double> polyMatr(n, n);  //Матрица на основе коэффициентов хар. полинома
     polyMatr.fill(0);
     for (int i = 0; i < n; ++i)
     {
@@ -741,14 +772,14 @@ matrix<double>& designFeedbackControl(matrix<d_interval> &A,
         }
     }
 
-    matrix<d_interval> P(n, n);
+    matrix<interval_double> P(n, n);
 
-    matrix<d_interval>::multiply(P, Y, polyMatr);
+    matrix<interval_double>::multiply(P, Y, polyMatr);
 
-    matrix<d_interval> f(1, n);
+    matrix<interval_double> f(1, n);
     for (int i = 0; i < n; ++i)
     {
-        f(0, i) = d_interval(D(0, n - i).lower() - charact_poly(0, n - i).lower(),
+        f(0, i) = interval_double(D(0, n - i).lower() - charact_poly(0, n - i).lower(),
                              D(0, n - i).upper() - charact_poly(0, n - i).upper());
     }
 
@@ -778,27 +809,15 @@ matrix<double>& designFeedbackControl(matrix<d_interval> &A,
     return *k;
 }
 
-void intervalEuler(matrix<d_interval> &A, matrix<d_interval> &x0, double h,
-                   double t0, double t1, vector< matrix<d_interval> > &res)
-{
-    int n = x0.getRows();
-    matrix<d_interval> xk = x0,
-            Axk(n, 1);
-
-    int k = 0;
-    double tk = 0;
-
-    while (tk <= t1)
-    {
-        res.push_back(xk);
-        tk = t0 + k * h;
-        matrix<d_interval>::multiply(Axk, A, xk);
-        Axk *= h;
-        xk += Axk;
-        ++k;
-    }
-}
-
+/*!
+  \brief Реализует метод Эйлера.
+  \param A Квадратная nxn матрица системы дифференциальных уравнений.
+  \param x0 Начальное состояние - столбец nx1.
+  \param h Шаг моделирования.
+  \param t0 Начальное значение аргумента.
+  \param t1 Конечное значение аргумента.
+  \param res Вектор значений функции.
+ */
 void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
                   double t0, double t1, vector< matrix<double> > &res)
 {
@@ -820,6 +839,12 @@ void numericEuler(matrix<double> &A, matrix<double> &x0, double h,
     }
 }
 
+/*!
+  \brief Создает матрицу псевдослучайных чисел от 0 до 1.
+  \param n Количество строк матрицы.
+  \param m Количество столбцов матрицы.
+  \return Указатель на случайную матрицу.
+ */
 matrix<double>* randMatrix(size_t n, size_t m)
 {
     matrix<double> *matr = new matrix<double>(n, m);

@@ -7,6 +7,11 @@
 using namespace std;
 using namespace int_calc;
 
+/*!
+  \brief Конструктор.
+  \param parent Родительский виджет.
+  \param st Хранилище переменных.
+ */
 MatrixEditingDialog::MatrixEditingDialog(QWidget *parent,
                                          int_calc::object_storage *st) :
     QDialog(parent),
@@ -36,7 +41,10 @@ MatrixEditingDialog::~MatrixEditingDialog()
     delete ui;
 }
 
-
+/*!
+  \brief Установка редактируемой матрицы.
+  \param matr Указатель на matrix_object, хранящий редактируемую матрицу.
+ */
 void MatrixEditingDialog::setEditedMatrix(int_calc::matrix_object *matr)
 {
     editedMatrix = matr;
@@ -88,12 +96,20 @@ void MatrixEditingDialog::setEditedMatrix(int_calc::matrix_object *matr)
     }
 }
 
+/*!
+  \brief Установка имени редактируемой матрицы.
+  \param name Имя редактируемой матрицы.
+ */
 void MatrixEditingDialog::setMatrixName(const QString &name)
 {
     matrixName = name;
     ui->nameLineEdit->setText(name);
 }
 
+/*!
+  \brief Изменение количества строк таблицы для редактирования матрицы.
+  \param cnt Новое количество строк.
+ */
 void MatrixEditingDialog::changeRowsCount(int cnt)
 {
     if(cnt > ui->tableWidget->rowCount())
@@ -117,6 +133,10 @@ void MatrixEditingDialog::changeRowsCount(int cnt)
     }
 }
 
+/*!
+  \brief Изменение количества столбцов таблицы для редактирования матрицы.
+  \param cnt Новое количество столбцов.
+ */
 void MatrixEditingDialog::changeColumnsCount(int cnt)
 {
     if(cnt > ui->tableWidget->columnCount())
@@ -140,6 +160,12 @@ void MatrixEditingDialog::changeColumnsCount(int cnt)
     }
 }
 
+/*!
+  \brief Проверка значения в ячейке на корректность.
+  \param row Номер строки ячейки.
+  \param col Номер столбца ячейки.
+  \return Если корректно true, иначе false.
+ */
 bool MatrixEditingDialog::checkCellContent(int row, int col)
 {
     if(ui->tableWidget->item(row, col) && !cellRegExp.exactMatch(
@@ -152,6 +178,9 @@ bool MatrixEditingDialog::checkCellContent(int row, int col)
     return true;
 }
 
+/*!
+  \brief Обработчик события закрытия окна.
+ */
 void MatrixEditingDialog::closeEvent(QCloseEvent *closeEvent)
 {
     if(!ui->nameLineEdit->hasAcceptableInput())
@@ -184,6 +213,10 @@ void MatrixEditingDialog::closeEvent(QCloseEvent *closeEvent)
         closeEvent->ignore();
 }
 
+/*!
+  \brief Сохраняет изменения в редактируемую матрицу.
+  \return true в случае успешного сохранения, false иначе.
+ */
 bool MatrixEditingDialog::saveMatrix()
 {
     QRegExp intervalRegExp("\\s*\\[\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s*;"
@@ -223,7 +256,7 @@ bool MatrixEditingDialog::saveMatrix()
                        delete intervalMatr;
                        return false;
                     }
-                    intervalMatr->getMatrix()(i, j) = d_interval(val1, val2);
+                    intervalMatr->getMatrix()(i, j) = interval_double(val1, val2);
                 }
                 else
                 {

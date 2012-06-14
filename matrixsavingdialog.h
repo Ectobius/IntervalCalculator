@@ -8,6 +8,9 @@ namespace Ui {
     class MatrixSavingDialog;
 }
 
+/*!
+  \brief Класс, представляющий окно сохранения матриц в файл.
+ */
 class MatrixSavingDialog : public QDialog
 {
     Q_OBJECT
@@ -19,7 +22,7 @@ public:
 private:
     Ui::MatrixSavingDialog *ui;
 
-    int_calc::object_storage *storage;
+    int_calc::object_storage *storage;  /*!< Хранилище объектов. */
 
 private slots:
     void loadVariables();

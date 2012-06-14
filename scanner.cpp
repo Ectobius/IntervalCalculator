@@ -4,24 +4,28 @@
 using namespace std;
 using namespace int_calc;
 
-scanner::scanner(): pos(0)
-{
-}
-
+/*!
+  \brief Состояния сканера.
+ */
 enum scanner_state
 {
-    initial,
-    scan_identifier,
-    scan_number1,
-    scan_number2,
-    scan_number3,
-    scan_number4,
-    scan_number5,
-    scan_number6,
-    skipping_spaces,
-    final
+    initial,            /*!< Начальное состояние. */
+    scan_identifier,    /*!< Сканирование идентификатора. */
+    scan_number1,       /*!< Сканирование числа 1. */
+    scan_number2,       /*!< Сканирование числа 2. */
+    scan_number3,       /*!< Сканирование числа 3. */
+    scan_number4,       /*!< Сканирование числа 4. */
+    scan_number5,       /*!< Сканирование числа 5. */
+    scan_number6,       /*!< Сканирование числа 6. */
+    skipping_spaces,    /*!< Пропуск пробелов. */
+    final               /*!< Конечное состояние. */
 };
 
+/*!
+  \brief Сканирование очередной лексемы.
+  \param lex Выходной параметр - изображение лексемы.
+  \return Тип отсканированной лексемы.
+ */
 scanner::lexem_type scanner::scanNext(std::string &lex)
 {
     lex = string();

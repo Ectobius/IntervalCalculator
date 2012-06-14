@@ -6,6 +6,11 @@
 
 using namespace int_calc;
 
+/*!
+  \brief Конструктор.
+  \param stor Хранилище объектов.
+  \param parent Родительский виджет.
+ */
 MatrixSavingDialog::MatrixSavingDialog(int_calc::object_storage *stor, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MatrixSavingDialog),
@@ -33,6 +38,9 @@ MatrixSavingDialog::~MatrixSavingDialog()
     delete ui;
 }
 
+/*!
+  \brief Заполнение списка переменных.
+ */
 void MatrixSavingDialog::loadVariables()
 {
     for(named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
@@ -48,6 +56,10 @@ void MatrixSavingDialog::loadVariables()
     }
 }
 
+/*!
+  \brief Установливает состояние чекбоксов в списке переменных.
+  \param state Новое состояние чекбоксов.
+ */
 void MatrixSavingDialog::setListCheckState(bool state)
 {
     for(int i = 0; i != ui->listWidget->count(); ++i)
@@ -61,16 +73,25 @@ void MatrixSavingDialog::setListCheckState(bool state)
     }
 }
 
+/*!
+  \brief Выделяет все элементы списка.
+ */
 void MatrixSavingDialog::selectAllVariables()
 {
     setListCheckState(true);
 }
 
+/*!
+  \brief Отменяет выбор всех элементов списка.
+ */
 void MatrixSavingDialog::cancelAllVariables()
 {
     setListCheckState(false);
 }
 
+/*!
+  \brief Вызывает окно выбора файла для сохранения.
+ */
 void MatrixSavingDialog::selectFile()
 {
     QString fileName =
@@ -80,6 +101,9 @@ void MatrixSavingDialog::selectFile()
         ui->fileNameLineEdit->setText(fileName);
 }
 
+/*!
+  \brief Сохраняет выбранные переменные в файл.
+ */
 void MatrixSavingDialog::saveVariables()
 {
     QFile file(ui->fileNameLineEdit->text());

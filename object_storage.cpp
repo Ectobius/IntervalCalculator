@@ -10,8 +10,16 @@ using boost::numeric::interval;
 namespace int_calc
 {
 
-object_storage::object_storage()
+stored_object* numeric_matrix_object::copy()
 {
+    numeric_matrix_object *obj = new numeric_matrix_object(*this);
+    return obj;
+}
+
+stored_object* interval_matrix_object::copy()
+{
+    interval_matrix_object *obj = new interval_matrix_object(*this);
+    return obj;
 }
 
 void map_object_storage::addObject(const std::string &nam, stored_object *obj)
@@ -34,9 +42,9 @@ void map_object_storage::deleteObject(const std::string &nam)
     storage.erase(iter);
 }
 
-stored_object* map_object_storage::getObjectByName(const std::string &nm)
+stored_object* map_object_storage::getObjectByName(const std::string &nam)
 {
-    storage_type::iterator iter = storage.find(nm);
+    storage_type::iterator iter = storage.find(nam);
     if(iter != storage.end())
     {
         return iter->second;
@@ -91,6 +99,21 @@ void map_object_storage::destroy()
 }
 
 //*************************************************************************************
+
+/*!
+  \brief Перегруженный оператор суммы объектов класса matrix_object.
+
+  Осуществляет сложение матриц, заключенных в объектах класса
+  matrix_object. Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+  Если одна из матриц размера 1x1, рассматривает ее как скаляр и
+  прибавляет единственный элемент этой матрицы ко всем элементам
+  другого операнда.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий сумму операндов.
+ */
 matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -226,7 +249,20 @@ matrix_object& operator +(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
-//Оператор минус
+/*!
+  \brief Перегруженный оператор разности объектов класса matrix_object.
+
+  Осуществляет вычитание матриц, заключенных в объектах класса
+  matrix_object. Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+  Если матрица в правом операнде имеет размер 1x1, рассматривает ее
+  как скаляр и вычитает ее единственный элемент из всех элементов
+  левого операнда.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий разность операндов.
+ */
 matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -364,6 +400,17 @@ matrix_object& operator -(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+/*!
+  \brief Перегруженный оператор умножения объектов класса matrix_object.
+
+  Осуществляет умножение матриц, заключенных в объектах класса
+  matrix_object. Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий произведение операндов.
+ */
 matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -393,7 +440,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
 
-            matrix< d_interval >::multiply(interval_res->getMatrix(),
+            matrix< interval_double >::multiply(interval_res->getMatrix(),
                                      left_num->getMatrix(), right_interval->getMatrix());
 
             result = interval_res;
@@ -415,7 +462,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            matrix< d_interval >::multiply(interval_res->getMatrix(),
+            matrix< interval_double >::multiply(interval_res->getMatrix(),
                                      left_interval->getMatrix(), right_num->getMatrix());
         }
         else if(dynamic_cast<interval_matrix_object*>(&rhs))
@@ -423,7 +470,7 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *right_interval =
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
-            matrix< d_interval >::multiply(interval_res->getMatrix(),
+            matrix< interval_double >::multiply(interval_res->getMatrix(),
                                      left_interval->getMatrix(), right_interval->getMatrix());
         }
         else
@@ -440,6 +487,18 @@ matrix_object& operator *(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+/*!
+  \brief Перегруженный оператор деления объектов класса matrix_object.
+
+  Требует, чтобы правый операнд содержал матрицу размера 1x1.
+  Осуществляет деление элементов матрицы правого операнда на элемент матрицы левого.
+  Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий частное операндов.
+ */
 matrix_object& operator /(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -511,6 +570,17 @@ matrix_object& operator /(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+/*!
+  \brief Конвертирует объект класса numeric_matrix_object в объект
+  класса interval_matrix_object.
+
+  Создает объект класса interval_matrix_object с интервальной матрицей,
+  концы интервалов которой равны соответствующим элементам числовой матрицы
+  аргумента.
+
+  \param num_obj Конвертируемый объект.
+  \return Результат конвертирования.
+ */
 interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj)
 {
     interval_matrix_object *res =
@@ -519,6 +589,17 @@ interval_matrix_object* convertNumericToInterval(numeric_matrix_object *num_obj)
     return res;
 }
 
+/*!
+  \brief Поэлементное произведение матриц, содержащихся в объектах классов,
+  производных от matrix_object.
+
+  Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий поэлементное произведение операндов.
+ */
 matrix_object& elementwiseProduct(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -601,6 +682,17 @@ matrix_object& elementwiseProduct(matrix_object &lhs, matrix_object &rhs)
     return *result;
 }
 
+/*!
+  \brief Кронекерово произведение матриц, содержащихся в объектах классов,
+  производных от matrix_object.
+
+  Может вызываться только для объектов классов
+  numeric_matrix_object и interval_matrix_object.
+
+  \param lhs Левый операнд.
+  \param rhs Правый операнд.
+  \return Объект, содержащий Кронекерово произведение операндов.
+ */
 matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs)
 {
     matrix_object *result = 0;
@@ -626,13 +718,13 @@ matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *right_interval =
                     dynamic_cast<interval_matrix_object*>(&rhs);
 
-            matrix<d_interval> left_interval_matr;
+            matrix<interval_double> left_interval_matr;
             left_interval_matr.assign(left_num->getMatrix());
 
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
 
-            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+            matrix<interval_double>::kronekerProduct(interval_res->getMatrix(),
                                             left_interval_matr, right_interval->getMatrix());
 
             result = interval_res;
@@ -651,13 +743,13 @@ matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs)
             numeric_matrix_object *right_num =
                     dynamic_cast<numeric_matrix_object*>(&rhs);
 
-            matrix<d_interval> right_interval_matr;
+            matrix<interval_double> right_interval_matr;
             right_interval_matr.assign(right_num->getMatrix());
 
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
 
-            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+            matrix<interval_double>::kronekerProduct(interval_res->getMatrix(),
                                             left_interval->getMatrix(), right_interval_matr);
 
             result = interval_res;
@@ -670,7 +762,7 @@ matrix_object& kronekerProduct(matrix_object &lhs, matrix_object &rhs)
             interval_matrix_object *interval_res =
                     new interval_matrix_object(0, 0);
 
-            matrix<d_interval>::kronekerProduct(interval_res->getMatrix(),
+            matrix<interval_double>::kronekerProduct(interval_res->getMatrix(),
                                             left_interval->getMatrix(), right_interval->getMatrix());
 
             result = interval_res;

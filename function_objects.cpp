@@ -734,7 +734,7 @@ stored_object* func_re_split::operator ()(vector<stored_object*> &args)
             delete x;
             throw runtime_error("System has no solutions");
         }
-        result->getMatrix()(i, 0) = d_interval(left, right);
+        result->getMatrix()(i, 0) = interval_double(left, right);
     }
 
     delete x;
@@ -828,7 +828,7 @@ stored_object* func_subdiff::operator ()(vector<stored_object*> &args)
             delete x;
             throw runtime_error("System has no solutions");
         }
-        result->getMatrix()(i, 0) = d_interval(left, right);
+        result->getMatrix()(i, 0) = interval_double(left, right);
     }
 
     delete x;
@@ -877,7 +877,7 @@ stored_object* func_leverrier::operator ()(vector<stored_object*> &args)
     return res;
 }
 
-d_interval _deter(matrix<d_interval> &matr)
+interval_double _deter(matrix<interval_double> &matr)
 {
     return matr.det();
 }

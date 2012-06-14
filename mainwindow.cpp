@@ -12,6 +12,9 @@
 #include "systemmodelingdialog.h"
 #include <QKeyEvent>
 
+/*!
+  \brief Конструктор.
+ */
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -25,7 +28,6 @@ MainWindow::MainWindow(QWidget *parent) :
     labels.append(trUtf8("Имя"));
     labels.append(trUtf8("Размер"));
     ui->treeWidget->setHeaderLabels(labels);
-
 
 
     SignalingStorage *signStor = new SignalingStorage();
@@ -81,6 +83,9 @@ MainWindow::~MainWindow()
     delete interpreter;
 }
 
+/*!
+  \brief Осуществляет действия по выполнению введенной команды.
+ */
 void MainWindow::executeCommand()
 {
     commands << ui->commandLineEdit->text();
@@ -132,7 +137,7 @@ void MainWindow::executeCommand()
         }
         else if (command_result *command_res =
                  dynamic_cast<command_result*>(exp_res))
-        {
+        {            
             if (command_res->getCommandName() == "#func")
             {
                 for (named_object obj = storage->getFirst(); obj.getObject(); obj = storage->getNext())
@@ -155,9 +160,6 @@ void MainWindow::executeCommand()
         sStream << err.what();
     }
 
-
-
-
     sStream << std::endl;
 
     ui->textEdit->append(ui->commandLineEdit->text());
@@ -165,6 +167,12 @@ void MainWindow::executeCommand()
     ui->commandLineEdit->clear();
 }
 
+/*!
+  \brief Обработчик события нажатия клавиши.
+
+  Обрабатывает нажатия клавиш - стрелок вверх и вниз для
+  перемещения по списку введенных команд.
+ */
 void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
 {
     if (ui->commandLineEdit->hasFocus() && !commands.isEmpty())
@@ -184,6 +192,9 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
     }
 }
 
+/*!
+  \brief Обновляет список переменных.
+ */
 void MainWindow::updateVariableList()
 {
     ui->treeWidget->clear();
@@ -203,6 +214,14 @@ void MainWindow::updateVariableList()
     ui->treeWidget->insertTopLevelItems(0, items);
 }
 
+/*!
+  \brief Редактирование матрицы.
+
+  Вызывает окно редактирования матрицы для редактирования уже
+  существующей матрицы, отображаемой в списке переменных.
+
+  \param item Выделенный элемент списка.
+ */
 void MainWindow::editMatrix(QTreeWidgetItem *item)
 {
     std::string name = item->text(0).toStdString();
@@ -218,6 +237,11 @@ void MainWindow::editMatrix(QTreeWidgetItem *item)
     }
 }
 
+/*!
+  \brief Добавление матрицы.
+
+  Создает новую переменную и вызывает окно для ее редактирования.
+ */
 void MainWindow::addMatrix()
 {
     std::string name("untitled");
@@ -238,6 +262,11 @@ void MainWindow::addMatrix()
     matrixEditingDialog->exec();
 }
 
+/*!
+  \brief Удаление матрицы.
+
+  Удаляет переменную, соответствующую выделенному элементу списка.
+ */
 void MainWindow::deleteMatrix()
 {
     if (ui->treeWidget->selectedItems().isEmpty())
@@ -251,12 +280,23 @@ void MainWindow::deleteMatrix()
     storage->deleteObject(item->text(0).toStdString());
 }
 
+/*!
+  \brief Сохранение переменных в файл.
+
+  Вызывает диалоговое окно сохранения переменных в файл.
+ */
 void MainWindow::saveVariables()
 {
     MatrixSavingDialog savingDialog(storage, this);
     savingDialog.exec();
 }
 
+/*!
+  \brief Загрузка переменных из файла.
+
+  Вызывает диалоговое окно выбора файла и существляет загрузку
+  переменных из этого файла.
+ */
 void MainWindow::loadVariables()
 {
     QString fileName =
@@ -305,6 +345,11 @@ void MainWindow::loadVariables()
     }
 }
 
+/*!
+  \brief Считывает переменные в список из текстового потока.
+  \param lst Список, в который нужно загрузить переменные.
+  \param inStream Текстовый поток, откуда нужно считать переменные.
+ */
 void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inStream)
 {
     QString curStr;
@@ -351,7 +396,7 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
                     intervalRegExp.indexIn(elemStr);
                     double val1 = intervalRegExp.cap(1).toDouble();
                     double val2 = intervalRegExp.cap(2).toDouble();
-                    intervalObj->getMatrix()(i, j) = d_interval(val1, val2);
+                    intervalObj->getMatrix()(i, j) = interval_double(val1, val2);
                 }
                 else if (numberRegExp.exactMatch(elemStr))
                 {
@@ -384,6 +429,9 @@ void MainWindow::loadVariablesToList(QList<named_object> &lst, QTextStream &inSt
     }
 }
 
+/*!
+  \brief Вызывает окно моделирования систем дифференциальных уравнений.
+ */
 void MainWindow::modelSystem()
 {
     SystemModelingDialog modelingDialog(storage, this);
@@ -392,11 +440,17 @@ void MainWindow::modelSystem()
     modelingDialog.exec();
 }
 
+/*!
+  \brief Очищает консоль.
+ */
 void MainWindow::clearConsole()
 {
     ui->textEdit->clear();
 }
 
+/*!
+  \brief Удаляет все переменные.
+ */
 void MainWindow::deleteVariables()
 {
     vector<string> deletedVar;
@@ -415,6 +469,9 @@ void MainWindow::deleteVariables()
     }
 }
 
+/*!
+  \brief Вызывает окно "О программе".
+ */
 void MainWindow::about()
 {
     QMessageBox::about(this, trUtf8("О программе"),
@@ -422,6 +479,9 @@ void MainWindow::about()
                               "<p>Автор: студент гр. ПОВТ-71 Поповцев А.В., ФИТ, АлтГТУ, 2012</p>"));
 }
 
+/*!
+  \brief Вызывает окно "О Qt".
+ */
 void MainWindow::aboutQt()
 {
     QMessageBox::aboutQt(this);

@@ -1,8 +1,20 @@
+/*!
+  \file interval_ext.h
+
+  Определяет некоторые функции над boost::numeric::interval,
+  которых нет в boost или определение которых в boost не
+  является подходящим.
+ */
+
 #ifndef INTERVAL_EXT_H
 #define INTERVAL_EXT_H
 
 #include "boost/numeric/interval.hpp"
 #include <iostream>
+
+/*!
+  Пространство имен, содержащее классы ядра приложения.
+ */
 namespace int_calc
 {
 template <class T, class P> std::ostream& operator<<(std::ostream&,

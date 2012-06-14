@@ -7,7 +7,13 @@
 
 using namespace int_calc;
 
-SystemModelingDialog::SystemModelingDialog(int_calc::object_storage *stor, QWidget *parent) :
+/*!
+  \brief Конструктор.
+  \param stor Хранилище переменных
+  \param parent Родительский виджет.
+ */
+SystemModelingDialog::SystemModelingDialog(
+    int_calc::object_storage *stor, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SystemModelingDialog),
     storage(stor),
@@ -56,6 +62,9 @@ SystemModelingDialog::~SystemModelingDialog()
     delete ui;
 }
 
+/*!
+  \brief Обновляет список для выбора матрицы.
+ */
 void SystemModelingDialog::updateMatrixComboBox()
 {
     ui->matrixComboBox->clear();
@@ -73,6 +82,10 @@ void SystemModelingDialog::updateMatrixComboBox()
     }
 }
 
+/*!
+  \brief Изменяет матрицу системы диф. уравнений.
+  \param name Имя переменной, содержащей новую матрицу.
+ */
 void SystemModelingDialog::changeMatrix(std::string name)
 {
     ui->rightWidget->setEnabled(false);
@@ -155,12 +168,19 @@ void SystemModelingDialog::selectedMatrixChanged(QString name)
     changeMatrix(name.toStdString());
 }
 
+/*!
+  \brief Вызывает отрисовку графика.
+ */
 void SystemModelingDialog::drawPushButton_clicked()
 {
    int coord = ui->coordComboBox->currentIndex();
    drawGraph(coord);
 }
 
+/*!
+  \brief Проверка корректности введенных значений.
+  \return true если введенные значения корректны, false иначе.
+ */
 bool SystemModelingDialog::checkInput()
 {
     if(!ui->stepLineEdit->hasAcceptableInput())
@@ -191,6 +211,9 @@ bool SystemModelingDialog::checkInput()
     return true;
 }
 
+/*!
+  \brief Рассчитывает искомую функцию.
+ */
 void SystemModelingDialog::calculateFunction()
 {
     std::string name = ui->matrixComboBox->currentText().toStdString();
@@ -235,6 +258,10 @@ void SystemModelingDialog::calculateFunction()
     ui->coordComboBox->setCurrentIndex(0);
 }
 
+/*!
+  \brief Рисует график одной из компонент вектора-функции.
+  \param coord Номер рисуемой координаты вектор-функции.
+ */
 void SystemModelingDialog::drawGraph(int coord)
 {
     QVector<double> dataX, dataY;

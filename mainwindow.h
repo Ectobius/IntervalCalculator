@@ -16,6 +16,9 @@ namespace Ui {
     class MainWindow;
 }
 
+/*!
+  \brief Класс, представляющий главное окно приложения.
+ */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -26,11 +29,11 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    MatrixEditingDialog *matrixEditingDialog;
-    object_storage *storage;
-    expression_interpreter *interpreter;
-    QStringList commands;
-    int currentCommandIndex;
+    MatrixEditingDialog *matrixEditingDialog;   /*!< Окно редактирования матрицы. */
+    object_storage *storage;                    /*!< Хранилище переменных. */
+    expression_interpreter *interpreter;        /*!< Интерпретатор выражений. */
+    QStringList commands;                       /*!< Список введенных команд. */
+    int currentCommandIndex;                    /*!< Индекс текущей команды. */
 
     void loadVariablesToList(QList<named_object> &lst, QTextStream &inStream);
 

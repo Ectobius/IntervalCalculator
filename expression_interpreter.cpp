@@ -8,7 +8,88 @@ using boost::numeric::interval;
 namespace int_calc
 {
 
-/*Вычисление унарного минуса*/
+unary_minus_node::~unary_minus_node()
+{
+    delete child;
+    delete result;
+}
+
+plus_node::~plus_node()
+{
+    delete left;
+    delete right;
+    delete result;
+}
+
+minus_node::~minus_node()
+{
+    delete left;
+    delete right;
+    delete result;
+}
+
+multiply_node::~multiply_node()
+{
+    delete left;
+    delete right;
+    delete result;
+}
+
+divide_node::~divide_node()
+{
+    delete left;
+    delete right;
+    delete result;
+}
+
+interval_creation_node::~interval_creation_node()
+{
+    delete left;
+    delete right;
+    delete result;
+}
+
+/*!
+  \brief Конструктор, создающий узел по заданному значению типа double.
+  \param val Числовое значение константы.
+ */
+constant_node::constant_node(double val) :
+    constant(0)
+{
+    numeric_matrix_object *num_obj = new numeric_matrix_object(1, 1);
+    num_obj->getMatrix()(0, 0) = val;
+    constant = num_obj;
+}
+
+/*!
+  \brief Конструктор, создающий узел по заданному интервальному значению.
+  \param ival Интервальное значение константы.
+ */
+constant_node::constant_node(interval_double ival) :
+    constant(0)
+{
+    matrix<interval_double> matr(1, 1);
+    constant = new interval_matrix_object(matr);
+    (*dynamic_cast<interval_matrix_object*>(constant)).getMatrix()(0, 0) = ival;
+}
+
+/*!
+  Вычисление значения узла, представляющего константу.
+  \return Объект, содержащий константу.
+ */
+stored_object* constant_node::operator()()
+{
+    return constant;
+}
+
+constant_node::~constant_node()
+{
+    delete constant;
+}
+
+/*!
+  Вычисление значения узла, представляющего унарный минус.
+ */
 stored_object* unary_minus_node::operator()()
 {
     stored_object *child_res = (*child)();
@@ -36,7 +117,9 @@ stored_object* unary_minus_node::operator()()
     }
 }
 
-/*Вычисление бинарного плюса*/
+/*!
+  Вычисление значения узла, представляющего операцию сложения.
+ */
 stored_object* plus_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -68,7 +151,9 @@ stored_object* plus_node::operator()()
     return result;
 }
 
-/*Вычисление бинарного минуса*/
+/*!
+  Вычисление значения узла, представляющего операцию вычитания.
+ */
 stored_object* minus_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -100,7 +185,9 @@ stored_object* minus_node::operator()()
     return result;
 }
 
-//Выполнение умножения
+/*!
+  Вычисление значения узла, представляющего операцию умножения.
+ */
 stored_object* multiply_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -132,6 +219,9 @@ stored_object* multiply_node::operator()()
     return result;
 }
 
+/*!
+  Вычисление значения узла, представляющего операцию деления.
+ */
 stored_object* divide_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -163,6 +253,9 @@ stored_object* divide_node::operator()()
     return result;
 }
 
+/*!
+  Вычисление значения узла, представляющего операцию создания интервала.
+ */
 stored_object* interval_creation_node::operator()()
 {
     stored_object *left_res = (*left)();
@@ -200,6 +293,9 @@ stored_object* interval_creation_node::operator()()
     return interval_res;
 }
 
+/*!
+  Вычисление значения узла, представляющего операцию создания матрицы.
+ */
 stored_object* matrix_creation_node::operator ()()
 {
     vector< vector<stored_object*> > childs_res;
@@ -359,6 +455,9 @@ matrix_creation_node::~matrix_creation_node()
     delete result;
 }
 
+/*!
+  Вычисление значения узла, представляющего операцию вызова функции.
+ */
 stored_object* function_call_node::operator ()()
 {
     vector<stored_object*> childs_res;
@@ -386,13 +485,19 @@ function_call_node::~function_call_node()
     delete result;
 }
 
-
+/*!
+  \brief Конструктор, создающий объект с заданным указателем на
+  хранилище переменных.
+ */
 expression_interpreter::expression_interpreter(object_storage *stor) :
     storage(stor)
 {
 }
 
-
+/*!
+  Вычисление значения функции, осуществляющей обращение к отдельным элементам
+  или подматрицам матрицы.
+ */
 stored_object* appeal_elements::operator ()(vector<stored_object*> &args)
 {
     matrix_object *res = 0;
@@ -553,6 +658,24 @@ stored_object* appeal_elements::operator ()(vector<stored_object*> &args)
 /********__________________Анализ_____________________**********************
 ****************************************************************************/
 
+/**************************************************************************
+  Грамматика:
+S -> E | id = E | C
+E -> -A | A - U | A + U | -A - U | -A + U | A
+U -> A + U | A - U | A
+A -> M * A | M / A | M
+M -> id | const | (E) | [E; E] | {B} | id(P)
+B -> G ; B | G
+G -> E, G | E
+P -> E, P | E | e
+C -> #id
+***************************************************************************/
+
+/*!
+  \brief Выполняет интерпретацию выражения.
+  \param cmd Текст выражения.
+  \return Результат интерпретации выражения.
+ */
 expression_result* expression_interpreter::execute(std::string &cmd)
 {
     scan.setText(cmd);    
@@ -562,6 +685,10 @@ expression_result* expression_interpreter::execute(std::string &cmd)
     return result;
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала S.
+  \return Результат интерпретации выражения.
+ */
 expression_result* expression_interpreter::S()
 {
     expression_result *res = 0;
@@ -581,9 +708,7 @@ expression_result* expression_interpreter::S()
         else
         {
             var_name = nm;
-        }
-
-        res = new assign_result(var_name);
+        }        
     }
     else if (type1 == scanner::command)
     {
@@ -596,6 +721,8 @@ expression_result* expression_interpreter::S()
         scan.setPosition(pos);
     }
 
+    res = new assign_result(var_name);
+
     expression_node *root = E();
 
     type1 = scan.scanNext(lex);
@@ -606,7 +733,7 @@ expression_result* expression_interpreter::S()
     }
     else
     {
-        stored_object *res = (*root)()->copy();
+        stored_object *res1 = (*root)()->copy();
         delete root;
 
         stored_object *assigned_obj = storage->getObjectByName(var_name);
@@ -620,12 +747,16 @@ expression_result* expression_interpreter::S()
             delete assigned_obj;
         }
 
-        storage->addObject(var_name, res);
+        storage->addObject(var_name, res1);
     }
 
     return res;
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала C.
+  \return Результат интерпретации выражения.
+ */
 expression_result* expression_interpreter::C()
 {
     expression_result *res = 0;
@@ -640,6 +771,10 @@ expression_result* expression_interpreter::C()
     return res;
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала E.
+  \return Корень дерева, построенного в процессе анализа.
+ */
 expression_node* expression_interpreter::E()
 {
     expression_node *result_node = 0;
@@ -683,7 +818,14 @@ expression_node* expression_interpreter::E()
     return result_node;
 }
 
-expression_node* expression_interpreter::U(expression_node *left_node, scanner::lexem_type op)
+/*!
+  \brief Реализует правило грамматики для нетерминала U.
+  \param left_node Узел, с которым нужно сформировать узел операции.
+  \param op Операция, узел которой нужно сформировать.
+  \return Корень дерева, построенного в процессе анализа.
+ */
+expression_node* expression_interpreter::U(
+    expression_node *left_node, scanner::lexem_type op)
 {
     expression_node *result_node = A(0, scanner::error_type);
 
@@ -715,7 +857,14 @@ expression_node* expression_interpreter::U(expression_node *left_node, scanner::
     return result_node;
 }
 
-expression_node* expression_interpreter::A(expression_node *left_node, scanner::lexem_type op)
+/*!
+  \brief Реализует правило грамматики для нетерминала A.
+  \param left_node Узел, с которым нужно сформировать узел операции.
+  \param op Операция, узел которой нужно сформировать.
+  \return Корень дерева, построенного в процессе анализа.
+ */
+expression_node* expression_interpreter::A(
+    expression_node *left_node, scanner::lexem_type op)
 {
     expression_node *result_node = M();
 
@@ -747,6 +896,10 @@ expression_node* expression_interpreter::A(expression_node *left_node, scanner::
     return result_node;
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала M.
+  \return Корень дерева, построенного в процессе анализа.
+ */
 expression_node* expression_interpreter::M()
 {
     expression_node *result_node = 0;
@@ -886,6 +1039,10 @@ expression_node* expression_interpreter::M()
     return result_node;
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала B.
+  \param vect Вектор векторов, представляющих строки указателей на потомков.
+ */
 void expression_interpreter::B(vector< vector<expression_node*> > &vect)
 {
     vector<expression_node*> row_vect;
@@ -906,6 +1063,11 @@ void expression_interpreter::B(vector< vector<expression_node*> > &vect)
     }
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала G.
+  \param vect Вектор указателей на потомков, представляющих
+  подматрицы формируемой матрицы.
+ */
 void expression_interpreter::G(vector<expression_node*> &vect)
 {
     expression_node *child = E();
@@ -927,6 +1089,10 @@ void expression_interpreter::G(vector<expression_node*> &vect)
     }
 }
 
+/*!
+  \brief Реализует правило грамматики для нетерминала P.
+  \param Вектор указателей на потомков, представляющих аргументы вызываемой функции.
+ */
 void expression_interpreter::P(vector<expression_node*> &vect)
 {
     expression_node *child = E();
